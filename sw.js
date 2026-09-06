@@ -1,7 +1,7 @@
 /* Guarda o app no aparelho para ele abrir sem internet.
    Quando você subir uma versão nova no GitHub, mude o número do CACHE
    (de v1 para v2, v3...) para o celular buscar a versão nova. */
-const CACHE = 'designacoes-v1';
+const CACHE = 'designacoes-v2';
 
 const ESSENCIAIS = [
   './',
