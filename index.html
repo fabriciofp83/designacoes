@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Designações — Largo do Ouro</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4A4E54">
+<link rel="apple-touch-icon" href="icone-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Designações">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
+<style>
+:root{
+  --papel:#F6F5F1; --carta:#FFFFFF; --tinta:#191B1F; --fraco:#71757C;
+  --linha:#E2DFD7; --ardosia:#4A4E54; --ouro:#C08F1E;
+  --vinho:#8C0F28; --verde:#2E6B4E;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--papel);color:var(--tinta);
+  font:16px/1.55 "Segoe UI",Roboto,-apple-system,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased}
+
+.faixa{background:var(--ardosia);color:#fff;padding:24px 0 26px;
+  box-shadow:inset 0 -3px 0 var(--ouro)}
+.faixa .dentro{max-width:900px;margin:0 auto;padding:0 22px;display:flex;align-items:center;gap:16px}
+.moeda{width:54px;height:54px;flex:none;filter:drop-shadow(0 2px 5px rgba(0,0,0,.4))}
+.faixa h1{margin:0;font:600 23px/1.2 Georgia,"Times New Roman",serif;letter-spacing:.2px}
+.faixa p{margin:3px 0 0;font-size:14px;color:#C9CCD1;letter-spacing:.4px}
+
+.folha{max-width:900px;margin:0 auto;padding:26px 22px 90px}
+.cartao{background:var(--carta);border:1px solid var(--linha);border-radius:12px;
+  padding:20px 22px 22px;margin-bottom:16px;box-shadow:0 1px 3px rgba(25,27,31,.05)}
+.cartao[hidden]{display:none}
+.topo{display:flex;align-items:center;gap:11px;margin-bottom:3px}
+.selo{background:var(--ouro);color:#fff;min-width:25px;height:25px;border-radius:50%;
+  display:grid;place-items:center;font-size:12.5px;font-weight:700;flex:none}
+h2{font-size:16.5px;font-weight:700;margin:0}
+.dica{color:var(--fraco);font-size:14px;margin:0 0 15px 36px}
+.corpo{margin-left:36px}
+@media(max-width:560px){.dica,.corpo{margin-left:0}}
+
+.solta{display:block;border:2px dashed var(--linha);border-radius:10px;padding:26px;
+  text-align:center;cursor:pointer;transition:.15s;background:#FCFCFA}
+.solta:hover,.solta.sobre{border-color:var(--ouro);background:#FFFBF0}
+.solta input{display:none}
+.ok{color:var(--verde);font-weight:600}
+
+label{display:block;font-size:13.5px;font-weight:600;margin:15px 0 5px}
+input[type=date],input[type=text],select{width:100%;padding:9px 11px;font-size:15px;
+  border:1px solid var(--linha);border-radius:7px;background:#fff;color:var(--tinta);font-family:inherit}
+input:focus,select:focus{outline:2px solid var(--ouro);outline-offset:1px}
+.dupla{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:560px){.dupla{grid-template-columns:1fr}}
+.grupoLista{margin-bottom:18px}
+.fichas{display:flex;flex-wrap:wrap;gap:7px;margin:6px 0}
+.ficha{display:inline-flex;align-items:center;gap:6px;background:#FCFBF7;border:1px solid var(--linha);
+  border-radius:20px;padding:5px 6px 5px 13px;font-size:14px}
+.ficha.off{opacity:.6;background:#F1EFEA}
+.ficha button{border:0;background:#EAE7DF;color:var(--tinta);border-radius:50%;width:20px;height:20px;
+  line-height:1;padding:0;font-size:13px;cursor:pointer;font-weight:700}
+.ficha button:hover{background:var(--ouro);color:#fff}
+.somar{display:flex;gap:8px;align-items:center}
+.somar input{flex:1}
+.somar button{padding:8px 14px;font-size:14px}
+.parFolga,.parEsp{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:8px}
+
+.escolhas{display:flex;flex-direction:column;gap:9px}
+.escolha{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;background:#FCFCFA;
+  border:1px solid var(--linha);border-radius:9px;cursor:pointer;transition:.12s}
+.escolha:hover{border-color:var(--ouro)}
+.escolha input{margin-top:3px;flex:none;accent-color:var(--ouro)}
+.escolha b{display:block;font-size:15px}
+.escolha em{color:var(--fraco);font-size:13.5px;font-style:normal}
+
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:11px 20px;cursor:pointer}
+.primario{background:var(--ardosia);color:#fff}
+.primario:hover{background:#3B3E43}
+.secundario{background:#fff;color:var(--tinta);border:1px solid var(--linha)}
+.secundario:hover{border-color:var(--ouro)}
+.acoes{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+
+.quadro{margin:22px 0 6px}
+table.pl{border-collapse:collapse;background:#fff;border:2.5px solid #000;width:100%}
+table.pl caption{caption-side:top;border:2.5px solid #000;border-bottom:0;
+  font-weight:700;font-size:15px;padding:9px;text-align:center;background:#fff;letter-spacing:.3px}
+table.pl th{border:1px solid #000;padding:7px 8px;font-size:12.5px;font-weight:700;text-align:center}
+table.pl td{border:1px solid #000;padding:7px 8px;font-size:13.5px;text-align:center}
+table.pl td.dt{white-space:nowrap;width:100px}
+table.pl tr.mexida td{background:#FFF7E2}
+
+.aviso{border-left:4px solid var(--ouro);background:#FFF9EC;padding:12px 15px;
+  border-radius:0 8px 8px 0;font-size:14.5px;margin:14px 0;line-height:1.65}
+.aviso.erro{border-left-color:var(--vinho);background:#FCEFF2}
+table.edit{width:100%;border-collapse:collapse;margin-top:10px}
+table.edit th{font-size:12px;color:var(--fraco);text-align:left;padding:4px 6px;font-weight:600}
+table.edit td{padding:3px 4px}
+table.edit input{width:100%;border:1px solid var(--linha);border-radius:6px;
+  padding:6px 8px;font:inherit;font-size:14px}
+table.edit td.dt{color:var(--fraco);font-size:14px;white-space:nowrap;width:92px;padding-left:6px}
+.mini{width:100%;border:1px solid var(--linha);border-radius:6px;padding:6px 8px;font:inherit;font-size:14px}
+footer{color:var(--fraco);font-size:13px;text-align:center;padding:6px 0 0}
+
+@media print{
+  @page{margin:16mm}
+  .faixa,.dica,.solta,.acoes,footer,.topo,.aviso,#c1,#c2,#c3,#c4,#c5{display:none!important}
+  .cartao{border:0;box-shadow:none;padding:0;margin:0}
+  .corpo{margin:0}
+  body{background:#fff}
+  .folha{max-width:none;padding:0}
+  /* cada lista sozinha na sua página, centralizada */
+  .quadro{page-break-after:always;page-break-inside:avoid;margin:0;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    min-height:246mm}
+  .quadro:last-child{page-break-after:auto}
+  table.pl{width:auto;margin:0 auto}
+  table.pl caption{width:100%}
+  table.pl td,table.pl th{padding:7px 14px}
+  table.pl tr.mexida td{background:#fff}
+}
+</style>
+</head>
+<body>
+
+<div class="faixa"><div class="dentro">
+  <svg class="moeda" viewBox="0 0 100 100" aria-hidden="true">
+    <defs><linearGradient id="g" x1="0" y1="0" x2=".7" y2="1">
+      <stop offset="0" stop-color="#F3DC9A"/><stop offset=".45" stop-color="#C99B2B"/>
+      <stop offset="1" stop-color="#8A6210"/></linearGradient></defs>
+    <circle cx="50" cy="50" r="47" fill="url(#g)"/>
+    <circle cx="50" cy="50" r="41" fill="none" stroke="#6E4E0C" stroke-opacity=".5" stroke-width="1.6"/>
+    <circle cx="50" cy="50" r="37" fill="none" stroke="#FBEFC8" stroke-opacity=".55" stroke-width="1"/>
+    <text x="50" y="63" text-anchor="middle" font-family="Georgia,serif" font-weight="700"
+          font-size="33" fill="#5C3F08" letter-spacing="1">LG</text>
+  </svg>
+  <div><h1>Designações da congregação</h1><p>LARGO DO OURO</p></div>
+</div></div>
+
+<div class="folha">
+
+<section class="cartao" id="c1">
+  <div class="topo"><span class="selo">1</span><h2>A apostila da reunião</h2></div>
+  <p class="dica">O PDF de <i>Nossa Vida e Ministério Cristão</i> com as designações já preenchidas.</p>
+  <div class="corpo">
+    <label for="eventos">Tem assembleia ou congresso no período?</label>
+    <input type="text" id="eventos" placeholder="07/11/2026 — separe por vírgula; deixe vazio se não houver">
+    <p class="dica" style="margin:5px 0 0 0">Aqui a <b>semana inteira</b> sai de tudo: das listas,
+       da limpeza e da programação em Word. É o campo certo para assembleia e congresso.</p>
+    <label>Em que dias são as reuniões?</label>
+    <div class="parEsp">
+      <select id="diaMeio">
+        <option value="1">segunda</option><option value="2">terça</option>
+        <option value="3" selected>quarta</option><option value="4">quinta</option>
+        <option value="5">sexta</option>
+      </select>
+      <select id="diaFds">
+        <option value="6">sábado</option><option value="0" selected>domingo</option>
+      </select>
+    </div>
+    <label>Tem reunião especial na semana? (Celebração ou outra)</label>
+    <p class="dica" style="margin:0 0 6px 0">Só para quando <b>uma</b> das duas reuniões cai.
+       Se a semana inteira ficar sem reunião, use o campo de assembleia acima.</p>
+    <div id="especiais"></div>
+    <div class="acoes" style="margin-top:8px">
+      <button class="secundario" id="maisEsp">Acrescentar semana especial</button>
+    </div>
+    <label for="super" style="margin-top:18px">Tem visita do superintendente?</label>
+    <input type="text" id="super" placeholder="14/10/2026 — a reunião dessa semana passa para o dia anterior">
+    <label style="margin-top:18px">O arquivo da apostila</label>
+    <label class="solta" id="soltaPdf">
+      <input type="file" id="arqPdf" accept=".pdf">
+      <span id="pdfTxt">Arraste o PDF da apostila aqui ou clique para escolher</span>
+    </label>
+    <div class="acoes"><button class="secundario" id="pularPdf">Não tenho o PDF agora</button></div>
+    <label for="inicio" style="margin-top:18px">Primeira reunião de meio de semana</label>
+    <input type="date" id="inicio">
+    <p class="dica" style="margin:6px 0 0 0">Vem do PDF, já descontando as semanas sem reunião.
+       Só mexa se precisar.</p>
+    <div class="aviso" id="avisoPeriodo" hidden style="margin-top:10px"></div>
+  </div>
+</section>
+
+<section class="cartao" id="c2" hidden>
+  <div class="topo"><span class="selo">2</span><h2>A planilha de hoje</h2></div>
+  <p class="dica">Dela saem o ponto do ciclo e as designações futuras que já estão marcadas.</p>
+  <div class="corpo">
+    <label class="solta" id="solta">
+      <input type="file" id="arq" accept=".xlsx">
+      <span id="soltaTxt">Arraste o arquivo aqui ou clique para escolher</span>
+    </label>
+    <div class="acoes"><button class="secundario" id="pularPlanilha">Não vou usar a planilha
+      — só quero discursos ou limpeza</button></div>
+    <label class="escolha" id="blocoManter" hidden style="margin-top:12px">
+      <input type="checkbox" id="cRecalc">
+      <span><b>Recalcular as datas que já estão preenchidas</b>
+        <em>marque se esta planilha já foi gerada pelo app, ou se quiser redistribuir tudo</em></span>
+    </label>
+  </div>
+</section>
+
+<section class="cartao" id="c2b" hidden>
+  <div class="topo"><span class="selo">3</span><h2>Lista de limpeza</h2></div>
+  <p class="dica">Opcional. O arquivo Word da última lista de limpeza — dele sai o grupo
+     que abre o próximo rodízio.</p>
+  <div class="corpo">
+    <label class="solta" id="soltaLimp">
+      <input type="file" id="arqLimp" accept=".docx">
+      <span id="limpTxt">Arraste aqui a última lista de limpeza (Word) ou clique para escolher</span>
+    </label>
+    <label for="iniLimp">Começar em qual semana</label>
+    <input type="date" id="iniLimp">
+    <p class="dica" style="margin:5px 0 0 0">Em branco, usa a data da etapa 1. Preencha só
+       quando a limpeza for de um período diferente das outras listas.</p>
+  </div>
+</section>
+
+<section class="cartao" id="c2c" hidden>
+  <div class="topo"><span class="selo">4</span><h2>A lista de discursos</h2></div>
+  <p class="dica">Foto do papel ou o arquivo digital que mandaram. As datas eu já sei;
+     daqui saem só os temas e os oradores.</p>
+  <div class="corpo">
+    <label class="solta" id="soltaDisc">
+      <input type="file" id="arqDisc" accept="image/*,.pdf">
+      <span id="discTxt">Arraste a foto ou o PDF aqui, ou clique para escolher</span>
+    </label>
+    <label for="iniDisc">Começar em qual domingo</label>
+    <input type="date" id="iniDisc">
+    <p class="dica" style="margin:5px 0 12px 0">Em branco, usa a data da etapa 1. Preencha só
+       quando os discursos forem de um período diferente.</p>
+    <div id="tabDisc"></div>
+    <div class="acoes" id="acoesDisc" hidden>
+      <button class="secundario" id="maisDisc">Acrescentar discurso</button>
+      <button class="secundario" id="menosDisc">Tirar o último</button>
+    </div>
+  </div>
+</section>
+
+<section class="cartao" id="c2d" hidden>
+  <div class="topo"><span class="selo">5</span><h2>Modelo da programação</h2></div>
+  <p class="dica">Opcional. Pode ser uma folha antiga já preenchida — o app apaga o texto
+     e escreve por cima, mantendo tarjas, linha separadora e rodapé.</p>
+  <div class="corpo">
+    <label class="solta" id="soltaMS">
+      <input type="file" id="arqMS" accept=".docx">
+      <span id="msTxt">Arraste o modelo aqui ou clique para escolher</span>
+    </label>
+  </div>
+</section>
+
+<section class="cartao" id="c3b" hidden>
+  <div class="topo"><span class="selo">6</span><h2>Folga do Antônio Marcos</h2></div>
+  <p class="dica">Ele só é designado nos dias de folga. Escolha o mês e se ele folga em dia
+     par ou ímpar. <b>Mês que ficar como "não sei" fica sem designação para ele</b>, então
+     acrescente todos os meses do período que você souber.</p>
+  <div class="corpo">
+    <div id="folgas"></div>
+    <div class="acoes"><button class="secundario" id="maisFolga">Acrescentar mês</button></div>
+  </div>
+</section>
+
+<section class="cartao" id="c4" hidden>
+  <div class="topo"><span class="selo">7</span><h2>Quem já tem parte no meio de semana</h2></div>
+  <p class="dica" id="dicaOcup">Preenchido pelo PDF. Corrija se algo ficou errado.</p>
+  <div class="corpo"><div id="ocupados"></div></div>
+</section>
+
+<section class="cartao" id="c4c" hidden>
+  <div class="topo"><span class="selo">8</span><h2>Quem participa</h2></div>
+  <p class="dica">Só mexa aqui quando alguém entrar ou sair. A ordem é a do rodízio.
+     O <b>&times;</b> põe a pessoa em standby, sem apagar: ela fica guardada e volta
+     quando você clicar na seta. Tudo isso fica salvo no aparelho.</p>
+  <div class="corpo">
+    <details>
+      <summary style="cursor:pointer;font-size:13.5px;font-weight:600;color:var(--fraco)">
+        Ver e editar as listas</summary>
+      <div id="listas" style="margin-top:12px"></div>
+      <div class="acoes"><button class="secundario" id="voltaPadrao">Voltar ao padrão</button></div>
+    </details>
+  </div>
+</section>
+
+<section class="cartao" id="c5" hidden>
+  <div class="topo"><span class="selo">9</span><h2>O que montar</h2></div>
+  <div class="corpo">
+    <div class="escolhas">
+      <label class="escolha"><input type="checkbox" id="cLeit" checked>
+        <span><b>Leitores do estudo bíblico</b><em>10 quartas</em></span></label>
+      <label class="escolha"><input type="checkbox" id="cFds" checked>
+        <span><b>Presidência e leitores de A Sentinela</b><em>12 domingos</em></span></label>
+      <label class="escolha"><input type="checkbox" id="cInd" checked>
+        <span><b>Indicadores e microfones volantes</b><em>19 datas, alternando quarta e domingo</em></span></label>
+      <label class="escolha"><input type="checkbox" id="cMS">
+        <span><b>Programação do meio de semana</b><em>sai em Word, duas semanas por folha; se sobrar uma, ela sai sozinha</em></span></label>
+      <label class="escolha"><input type="checkbox" id="cDisc">
+        <span><b>Discursos públicos</b><em>quantos domingos você precisar</em></span></label>
+      <label class="escolha"><input type="checkbox" id="cLimp">
+        <span><b>Limpeza pós-reunião</b><em>16 semanas, sai em Word</em></span></label>
+    </div>
+    <div class="acoes"><button class="primario" id="btnMontar">Montar as listas</button></div>
+  </div>
+</section>
+
+<section class="cartao" id="c6" hidden>
+  <div class="topo"><span class="selo">10</span><h2>Confira antes de baixar</h2></div>
+  <p class="dica">As linhas destacadas são as que eu mudei. Se algum nome estiver errado,
+     corrija na etapa 8 e clique em "Alterei algo — refazer as listas": tudo é recalculado.</p>
+  <div class="corpo">
+    <div id="saida"></div>
+    <p class="dica" style="margin:18px 0 0 0">
+      <b>A planilha do Excel</b> traz os leitores, a presidência, os indicadores e os discursos.
+      <b>A programação</b> e <b>a lista de limpeza</b> saem em Word, cada uma no seu botão —
+      eles só aparecem se você tiver subido o modelo correspondente.</p>
+    <div class="acoes">
+      <button class="primario" id="btnBaixar">Baixar a planilha do Excel</button>
+      <button class="secundario" id="btnMS" hidden>Baixar a programação da reunião do meio de semana</button>
+      <button class="secundario" id="btnLimpeza" hidden>Baixar a lista de limpeza</button>
+      <button class="secundario" id="btnRefazer">Alterei algo — refazer as listas</button>
+    </div>
+  </div>
+</section>
+
+<footer>versão 6set-z — um arquivo só, funciona sem internet depois da primeira abertura.</footer>
+</div>
+
+<script>
+/* ============ ciclos e regras ============ */
+let CICLO_LEITOR = ['Antônio Marcos','Peterson','Gilberto','André','Eduardo','Sérgio',
+  'Robert','Cláudio','Valdir','Marcos Antônio','Everton'];
+let CICLO_PRES = ['Uelinton','Danilo','Sérgio','Humberto','Francisco','Ademar','Jonas',
+  'Themístocles','Jorge Ricardo','Peterson'];
+let CICLO_SENT = ['Eduardo','Peterson','Gilberto','Antônio Marcos','André','Sérgio',
+  'Valdir','Cláudio','Everton','Marcos Antônio'];
+let ENTRADA  = ['Natanael','Davi','André','Robert','Antônio Marcos'];
+let INTERNO  = ['Natanael','José Ventura','Davi','Antônio Marcos','Peterson','André',
+  'Sérgio','Eduardo','Valdir','Antônio Machado','Gilberto','Robert','Marcos Antônio',
+  'Everton','Cláudio'];
+let MICROFONE = ['Fabrício','Davi','Marcos Antônio','Antônio Marcos','Peterson','André',
+  'Sérgio','Eduardo','Gilberto','Robert','Everton'];
+let SO_DOMINGO = ['Fabrício'];
+let EVITAR_QUARTA = ['Robert','André'];
+/* compara nomes de aba sem se importar com acento, caixa ou espaço extra */
+const chaveAba = t => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .replace(/\s+/g,' ').trim().toUpperCase();
+const acharAba = nome => Object.keys(planilhas).find(n => chaveAba(n) === chaveAba(nome));
+const ABAS = {
+  leitores: {nome:'LEITORES EST BIBLICO', linha0:4, n:10, cols:['B','C'],
+    titulo:'LEITORES DO ESTUDO BÍBLICO DE CONGREGAÇÃO', cabs:['DATA','LEITOR DESIGNADO']},
+  fds: {nome:'PRESIDENCIA FDS & LEITORES W', linha0:4, n:12, cols:['B','C','D'],
+    titulo:'REUNIÃO DE FIM DE SEMANA',
+    cabs:['DATA','PRESIDENTE','LEITOR DO ESTUDO DE A SENTINELA']},
+  ind: {nome:'INDICADORES & VOLANTES', linha0:5, n:19, cols:['B','C','D','E','F'],
+    titulo:'INDICADORES E MICROFONES VOLANTES',
+    cabs:['DATA','INDICADOR DE ENTRADA','INDICADOR DE AUDITÓRIO',
+          'MICROFONE VOLANTE I','MICROFONE VOLANTE II']}
+};
+const DISCURSOS = {nome:'DISCURSOS PUB', linha0:4, n:9, passo:2,
+  cols:['B','C','D'], titulo:'PROGRAMAÇÃO DE DISCURSOS PARA O PÚBLICO',
+  cabs:['DATA','TEMA','ORADOR']};
+const MESNOME = ['janeiro','fevereiro','março','abril','maio','junho','julho',
+  'agosto','setembro','outubro','novembro','dezembro'];
+
+/* ============ utilidades ============ */
+const $ = s => document.querySelector(s);
+const sem = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/gi,'').toUpperCase();
+const igual = (a,b) => sem(a) === sem(b);
+const MAI = s => String(s).toLocaleUpperCase('pt-BR');
+const fmt = d => String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');
+const fmtL = d => d.getDate()+' de '+MESNOME[d.getMonth()];
+const serial = d => Math.round((Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()) -
+  Date.UTC(1899,11,30)) / 86400000);
+const deSerial = n => { const u = new Date(Date.UTC(1899,11,30) + Number(n)*86400000);
+  return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()); };
+const somaDias = (d,n) => new Date(d.getFullYear(), d.getMonth(), d.getDate()+n);
+
+function lerDatas(txt){
+  return (txt||'').split(',').map(s=>s.trim()).filter(Boolean).map(s=>{
+    const m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    return m ? new Date(+m[3], +m[2]-1, +m[1]) : null;
+  }).filter(Boolean);
+}
+/* os dias das duas reuniões saem das caixas, não estão fixos no código */
+/* se a caixa não existir ou vier vazia, volta ao padrão quarta e domingo —
+   sem isso um valor vazio viraria zero, que é domingo */
+const dia = (sel, padrao) => {
+  const e = $(sel); const v = e ? parseInt(e.value, 10) : NaN;
+  return (Number.isInteger(v) && v >= 0 && v <= 6) ? v : padrao;
+};
+const diaMeio = () => dia('#diaMeio', 3);
+const diaFds  = () => dia('#diaFds', 0);
+const ehMeio = d => d.getDay() === diaMeio();
+const ehFds  = d => d.getDay() === diaFds();
+/* quantos dias andar de uma reunião para a outra, dentro da mesma semana */
+const passoParaFds = () => ((diaFds() - diaMeio()) + 7) % 7;
+/* a apostila conta a semana de segunda a domingo */
+const desdeSegunda = dia => (dia + 6) % 7;
+
+/* preenche as caixas de dia; o resto do código já usa diaMeio() e diaFds() */
+const DIAS = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+(function montaDias(){
+  const op = (sel, lista, padrao) => { if(!$(sel)) return;
+    $(sel).innerHTML = lista.map(d => '<option value="' + d + '"' +
+      (d===padrao?' selected':'') + '>' + DIAS[d] + '</option>').join(''); };
+  op('#diaMeio', [1,2,3,4,5], 3);
+  op('#diaFds', [6,0], 0);
+})();
+const segundaDe = d => somaDias(d, -desdeSegunda(d.getDay()));
+const reuniaoMeio = seg => somaDias(seg, desdeSegunda(diaMeio()));
+const reuniaoFds  = seg => somaDias(seg, desdeSegunda(diaFds()));
+
+/* semana com reunião especial: uma das duas reuniões não acontece */
+function linhaEspecial(){
+  return '<div class="parEsp"><input type="text" class="espData" ' +
+    'placeholder="ex: 02/04/2027">' +
+    '<select class="espDia"><option value="qua">nessa semana não tem a do meio de semana</option>' +
+    '<option value="dom">nessa semana não tem a de fim de semana</option></select></div>';
+}
+$('#maisEsp').addEventListener('click', () =>
+  $('#especiais').insertAdjacentHTML('beforeend', linhaEspecial()));
+$('#especiais').innerHTML = linhaEspecial();   // já nasce com uma linha visível
+function especiais(){
+  return [...document.querySelectorAll('#especiais .parEsp')].map(l => {
+    const d = lerDatas(l.querySelector('.espData').value)[0];
+    return d ? {data:d, dia:l.querySelector('.espDia').value} : null;
+  }).filter(Boolean);
+}
+/* true quando aquela reunião específica não acontece */
+function semReuniao(eventos, dia){
+  if(semanaMorta(eventos, dia)) return true;         // evento derruba a semana inteira
+  return especiais().some(e => {
+    const seg = somaDias(e.data, -((e.data.getDay()+6)%7));
+    const naSemana = dia >= seg && dia <= somaDias(seg,6);
+    return naSemana && ((e.dia === 'qua' && ehMeio(dia)) ||
+                        (e.dia === 'dom' && ehFds(dia)));
+  });
+}
+/* na semana do superintendente a reunião de quarta passa para terça */
+function ajustaSuper(d){
+  if(!ehMeio(d)) return d;
+  const sup = lerDatas($('#super').value);
+  const seg = somaDias(d, -((d.getDay()+6)%7));
+  return sup.some(x => x >= seg && x <= somaDias(seg,6)) ? somaDias(d,-1) : d;
+}
+/* a semana inteira do evento fica sem reunião */
+function semanaMorta(eventos, dia){
+  return eventos.some(ev => {
+    const seg = somaDias(ev, -((ev.getDay()+6)%7));
+    return dia >= seg && dia <= somaDias(seg,6);
+  });
+}
+
+/* ============ estado ============ */
+let zip=null, strings=[], planilhas={}, resultado=null, quartas=[];
+let doPdf=null, quartasPdf=[], jaNaPlanilha={}, ultimos={};
+
+/* ============ PDF da apostila ============ */
+const MESES = {JANEIRO:1,FEVEREIRO:2,MARCO:3,ABRIL:4,MAIO:5,JUNHO:6,JULHO:7,
+  AGOSTO:8,SETEMBRO:9,OUTUBRO:10,NOVEMBRO:11,DEZEMBRO:12};
+const NOME_MES = Object.keys(MESES).join('|');
+const APELIDOS = {THEMISTOCLE:'Themístocles', JULIAROBERT:'Júlia Robert', ANGELICAPINA:'Angélica Pina',
+  JONASGOMES:'Jonas', JORGETRINDADE:'Jorge', DANILOARAUJO:'Danilo',
+  ANTONIOMACHADO:'Antônio Machado', MARCOSANTONIO:'Marcos Antônio',
+  ANTONIOMARCOS:'Antônio Marcos', JOAOSOARES:'João Soares'};
+const arrumaNome = n => APELIDOS[sem(n)] || n.trim();
+
+async function lerPdf(file){
+  const lib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
+  lib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const doc = await lib.getDocument({data: await file.arrayBuffer()}).promise;
+  const pags = [];
+  const detalhe = [];
+  for(let n=1; n<=doc.numPages; n++){
+    const pg = await doc.getPage(n);
+    const tc = await pg.getTextContent();
+    const an = await pg.getAnnotations();
+    const linhas = await linhasDaPagina(pg);
+    const nvcL = linhas.find(l => l.txt.startsWith('NOSSA'));
+    detalhe.push({n, linhas, itens: itensDaPagina(linhas), canticos: canticosDaPagina(linhas),
+      cab: cabecalho(linhas), nvcY: nvcL ? nvcL.y : null, nvcX: nvcL ? nvcL.x0 : 0,
+      fim: linhas.find(l => /Coment\S*rios\s*finais/.test(l.txt)),
+      an: an.filter(a => a.contentsObj && a.contentsObj.str.trim())
+            .map(a => ({txt:a.contentsObj.str.trim(), y:a.rect[3], x:a.rect[0]}))});
+    const topo = tc.items.filter(i => i.transform[5] > 630)
+      .sort((a,b) => a.transform[4]-b.transform[4]).map(i => i.str).join('');
+    const limpo = topo.normalize('NFD').replace(/[\u0300-\u036f\s]/g,'').toUpperCase();
+    const m = limpo.match(new RegExp('^(\\d{1,2})(?:-\\d{1,2})?DE(' + NOME_MES + ')'));
+    pags.push({n, inicio: m ? {dia:+m[1], mes:MESES[m[2]]} : null,
+      nomes: an.filter(a => a.contentsObj && a.contentsObj.str.trim())
+        .map(a => ({txt:a.contentsObj.str.trim(), y:a.rect[3]}))});
+  }
+  const semanas = [];
+  pags.forEach(p => {
+    if(p.inicio) semanas.push({inicio:p.inicio, pags:[p]});
+    else if(semanas.length) semanas[semanas.length-1].pags.push(p);
+  });
+  if(!semanas.length) throw new Error('sem semanas');
+  /* a apostila não traz o ano. Se o primeiro mês dela está muito longe do mês
+     de hoje, é porque a apostila é do ano seguinte (ou do anterior). */
+  const hoje = new Date();
+  let ano = hoje.getFullYear();
+  const distancia = (semanas[0].inicio.mes - 1) - hoje.getMonth();
+  if(distancia < -6) ano++;        // apostila de janeiro aberta em dezembro
+  else if(distancia > 6) ano--;    // apostila de dezembro aberta em janeiro
+  let antes = semanas[0].inicio.mes;
+  doPdf = {}; quartasPdf = [];
+  semanas.forEach(s => {
+    if(s.inicio.mes < antes) ano++;
+    antes = s.inicio.mes;
+    const quarta = new Date(ano, s.inicio.mes-1, s.inicio.dia + desdeSegunda(diaMeio()));
+    const todos = s.pags.flatMap(p => p.nomes.map(x => ({...x, pag:p.n})));
+    const ultima = s.pags[s.pags.length-1].n;
+    const naUltima = todos.filter(t => t.pag === ultima);
+    /* o nome mais embaixo da última página é a oração final, que não conta como choque */
+    const oracao = naUltima.length ? naUltima.reduce((a,b) => a.y < b.y ? a : b) : null;
+    doPdf[quarta.getTime()] = todos.filter(t => t !== oracao)
+      .flatMap(t => t.txt.split('/').map(x => arrumaNome(x))).filter(Boolean);
+    quartasPdf.push(quarta);
+  });
+  /* a programação completa, para preencher o Word */
+  const grupos = [];
+  detalhe.forEach(p => { if(p.cab) grupos.push([p]); else if(grupos.length) grupos[grupos.length-1].push(p); });
+  semanasPdf = grupos.map((g,k) => {
+    const p0 = g[0], its = g.flatMap(p => p.itens.map(i => ({...i, pag:p.n})));
+    const r1 = casarNomes(its.filter(i=>i.pag===p0.n), p0.an, p0.fim);
+    const g2 = g.slice(1);
+    const r2 = casarNomes(its.filter(i=>i.pag!==p0.n), g2.flatMap(p=>p.an), g[g.length-1].fim);
+    const pN = g.find(p => p.nvcY !== null);
+    const nvc = pN ? Math.min.apply(null, its.filter(i =>
+      ordemLeitura(i.pag, i.x<250?0:1, i.y) >
+      ordemLeitura(pN.n, pN.nvcX<250?0:1, pN.nvcY)).map(i=>i.n).concat([99])) : 99;
+    const cant = g.flatMap(p => p.canticos);
+    const ab = cant.find(c => c.comOracao);
+    const fimC = cant.slice().reverse().find(c => c.comOracao && c !== ab);
+    const meio = cant.find(c => !c.comOracao);
+    const q = quartasPdf[k];
+    return {quarta:q, dataTexto: fmt(q) + '/' + q.getFullYear(), leitura: p0.cab.leitura,
+      presidente: r1.presidente, oracao: r2.oracao || r1.oracao,
+      cant:[ab?ab.n:'', meio?meio.n:'', fimC?fimC.n:''], nvc,
+      itens: its.sort((a,b)=>a.n-b.n), nomes:{...r1.nomes, ...r2.nomes}};
+  });
+  return quartasPdf;
+}
+
+$('#arqPdf').addEventListener('change', e => e.target.files[0] && abrirPdf(e.target.files[0]));
+['dragover','dragleave','drop'].forEach(ev => $('#soltaPdf').addEventListener(ev, e => {
+  e.preventDefault();
+  $('#soltaPdf').classList.toggle('sobre', ev === 'dragover');
+  if(ev === 'drop' && e.dataTransfer.files[0]) abrirPdf(e.dataTransfer.files[0]);
+}));
+$('#pularPlanilha').addEventListener('click', () => {
+  abrirEtapas();
+  $('#cLeit').checked = false; $('#cFds').checked = false; $('#cInd').checked = false;
+  $('#c2b').scrollIntoView({behavior:'smooth'});
+});
+$('#pularPdf').addEventListener('click', () => {
+  doPdf = null; quartasPdf = [];
+  $('#dicaOcup').textContent = 'Sem o PDF, digite os nomes olhando a programação.';
+  $('#c2').hidden = false; $('#c2').scrollIntoView({behavior:'smooth'});
+});
+
+async function abrirPdf(file){
+  $('#pdfTxt').textContent = 'Lendo…';
+  try{
+    const datas = await lerPdf(file);
+    const ev = lerDatas($('#eventos').value);
+    const mortas = datas.filter(q => semReuniao(ev,q));
+    $('#pdfTxt').innerHTML = '<span class="ok">' + datas.length + ' semanas lidas</span><br>' +
+      '<small style="color:var(--fraco)">' +
+      datas.map(q => semReuniao(ev,q)
+        ? '<s>' + fmt(q) + '</s>' : fmt(q)).join(' · ') + '</small>' +
+      (mortas.length ? '<br><small style="color:var(--fraco)">' + mortas.map(fmt).join(', ') +
+       ' fora: sem reunião de quarta. A lista começa em ' +
+       fmt(datas.find(q => !semReuniao(ev,q))) + '.</small>' : '');
+    $('#c2').hidden = false; $('#c2').scrollIntoView({behavior:'smooth'});
+    ajustarInicio();
+  }catch(err){
+    $('#pdfTxt').innerHTML = '<span style="color:var(--vinho)">Não consegui ler as semanas ' +
+      'deste PDF. Siga sem ele e digite os nomes na etapa 4.</span>';
+    doPdf = null; quartasPdf = []; $('#c2').hidden = false;
+  }
+}
+/* a primeira quarta é a primeira do PDF que realmente tenha reunião */
+function ajustarInicio(){
+  if(!quartasPdf.length) return;
+  const ev = lerDatas($('#eventos').value);
+  const viva = quartasPdf.find(q => !semReuniao(ev,q));
+  if(viva) $('#inicio').value = viva.toISOString().slice(0,10);
+}
+
+/* ============ planilha ============ */
+$('#arq').addEventListener('change', e => e.target.files[0] && abrir(e.target.files[0]));
+['dragover','dragleave','drop'].forEach(ev => $('#solta').addEventListener(ev, e => {
+  e.preventDefault();
+  $('#solta').classList.toggle('sobre', ev === 'dragover');
+  if(ev === 'drop' && e.dataTransfer.files[0]) abrir(e.dataTransfer.files[0]);
+}));
+
+/* abre as etapas seguintes; serve tanto para quem sobe a planilha
+   quanto para quem só quer os discursos ou a limpeza */
+function abrirEtapas(){
+  ['#c2b','#c2c','#c2d','#c3b','#c4','#c4c','#c5']
+    .forEach(id => { const c = $(id); if(c) c.hidden = false; });
+  if(!$('#inicio').value){
+    const g = periodoGuardado();
+    if(g && g.ultima){
+      /* continua da semana seguinte à última que você montou */
+      let d = somaDias(new Date(g.ultima + 'T00:00:00'), 7);
+      while(d.getDay() !== diaMeio()) d = somaDias(d, 1);
+      $('#inicio').value = d.toISOString().slice(0,10);
+      const av = $('#avisoPeriodo');
+      if(av){ av.hidden = false;
+        av.innerHTML = 'A última lista que você montou terminou em <b>' +
+          fmt(new Date(g.ultima + 'T00:00:00')) + '</b>. Sugeri começar na semana seguinte.'; }
+    } else {
+      const h = new Date();
+      $('#inicio').value = somaDias(h, (3 - h.getDay() + 7) % 7 || 7).toISOString().slice(0,10);
+    }
+  }
+  montarFolgas(); montarOcupados(); montarListas();
+}
+function valorCelula(xml, ref){
+  const m = xml.match(new RegExp('<c r="' + ref + '"([^>]*)(\\/>|>([\\s\\S]*?)<\\/c>)'));
+  if(!m || !m[3]) return '';
+  const inline = m[3].match(/<is>[\s\S]*?<t[^>]*>([\s\S]*?)<\/t>/);
+  if(inline) return inline[1];
+  const v = m[3].match(/<v>([\s\S]*?)<\/v>/);
+  if(!v) return '';
+  return / t="s"/.test(m[1]) ? (strings[+v[1]] || '') : v[1];
+}
+
+let achadas = [];
+async function abrir(file){
+  achadas = [];
+  try{
+    zip = await JSZip.loadAsync(file);
+    const wb = await zip.file('xl/workbook.xml').async('string');
+    const rels = await zip.file('xl/_rels/workbook.xml.rels').async('string');
+    /* cada programa grava esses atributos numa ordem diferente e o caminho pode vir
+       absoluto ou relativo — por isso lemos etiqueta por etiqueta */
+    const atrib = (tag, nome) => (tag.match(new RegExp(nome + '="([^"]+)"')) || [])[1];
+    const alvo = {};
+    (rels.match(/<Relationship\b[^>]*\/?>/g) || []).forEach(tag => {
+      const id = atrib(tag,'Id'), t = atrib(tag,'Target');
+      if(!id || !t || !/worksheets\//.test(t)) return;
+      const limpo = t.replace(/^\//,'');
+      alvo[id] = limpo.startsWith('xl/') ? limpo : 'xl/' + limpo;
+    });
+    planilhas = {};
+    (wb.match(/<sheet\b[^>]*\/?>/g) || []).forEach(tag => {
+      const nome = atrib(tag,'name'), rid = atrib(tag,'r:id') || atrib(tag,'relationshipId');
+      if(nome) achadas.push(nome.replace(/&amp;/g,'&').trim());
+      if(nome && rid && alvo[rid])
+        planilhas[nome.replace(/&amp;/g,'&').replace(/&quot;/g,'"').trim()] = alvo[rid];
+    });
+    if(!Object.keys(planilhas).length) throw new Error('nenhuma aba encontrada');
+    const ss = zip.file('xl/sharedStrings.xml');
+    strings = ss ? [...(await ss.async('string')).matchAll(/<si>([\s\S]*?)<\/si>/g)]
+      .map(m => [...m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map(t=>t[1]).join('')
+        .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')) : [];
+
+    jaNaPlanilha = {}; ultimos = {};
+    for(const chave of Object.keys(ABAS)){
+      const aba = acharAba(ABAS[chave].nome);
+      if(!aba) continue;
+      const xml = await zip.file(planilhas[aba]).async('string');
+      const {linha0, n, cols} = ABAS[chave];
+      const mapa = {}; let ultimo = null;
+      for(let i=0;i<n;i++){
+        const bruto = valorCelula(xml, cols[0] + (linha0+i));
+        if(!bruto || isNaN(+bruto)) continue;
+        const nomes = cols.slice(1).map(c => valorCelula(xml, c + (linha0+i)));
+        if(nomes.some(Boolean)){ mapa[deSerial(bruto).getTime()] = nomes; ultimo = nomes; }
+      }
+      jaNaPlanilha[chave] = mapa; ultimos[chave] = ultimo || [];
+    }
+    const futuras = new Set();
+    Object.keys(jaNaPlanilha).forEach(k => Object.keys(jaNaPlanilha[k] || {})
+      .forEach(t => { const d = new Date(+t); if(d >= new Date()) futuras.add(fmt(d)); }));
+    $('#soltaTxt').innerHTML = '<span class="ok">Planilha carregada</span><br>' +
+      '<small style="color:var(--fraco)">' + file.name + '</small>' +
+      (futuras.size ? '<br><small style="color:var(--fraco)">' + futuras.size +
+        ' data(s) futura(s) já preenchida(s): serão mantidas</small>' : '');
+    const bm = $('#blocoManter'); if(bm) bm.hidden = !futuras.size;
+    abrirEtapas();
+    montarTabelaDisc(null);
+    if(!$('#inicio').value){
+      const h = new Date();
+      $('#inicio').value = somaDias(h, (3 - h.getDay() + 7) % 7 || 7).toISOString().slice(0,10);
+    }
+    montarFolgas(); montarOcupados(); montarListas();
+    $('#c2b').scrollIntoView({behavior:'smooth'});
+  }catch(err){
+    const ext = (file.name || '').split('.').pop().toLowerCase();
+    $('#soltaTxt').innerHTML = '<span style="color:var(--vinho)">' + (
+      ext === 'xls'
+        ? 'Este arquivo é <b>.xls</b>, o formato antigo do Excel, que o navegador não abre. ' +
+          'Abra no Excel e salve como .xlsx: Arquivo → Salvar como → Pasta de Trabalho do Excel.'
+      : ext && ext !== 'xlsx'
+        ? 'O arquivo precisa ser <b>.xlsx</b>. Este é <b>.' + ext + '</b>.'
+        : 'Abri o arquivo, mas não achei as abas das designações.<br>' +
+          '<b>Abas que encontrei:</b> ' + (achadas.length ? achadas.join(' · ') : 'nenhuma') +
+          '<br><b>Abas que procuro:</b> LEITORES EST BIBLICO · PRESIDENCIA FDS &amp; LEITORES W · ' +
+          'INDICADORES &amp; VOLANTES · DISCURSOS PUB' +
+          '<br><small>' + (err && err.message ? err.message : '') +
+          ' — versão 6set-z</small>') + '</span>';
+  }
+}
+
+/* ============ folga do Antônio Marcos: um mês por linha ============ */
+function linhaFolga(mes){
+  const meses = MESNOME.map((n,i) =>
+    '<option value="' + i + '"' + (i===mes?' selected':'') + '>' + n + '</option>').join('');
+  return '<div class="parFolga"><select class="fMes">' + meses + '</select>' +
+    '<select class="fTipo"><option value="">não sei — não designar</option>' +
+    '<option value="1">dias ímpares</option><option value="0">dias pares</option></select></div>';
+}
+function montarFolgas(){
+  const escolhido = [...document.querySelectorAll('#folgas .parFolga')]
+    .map(p => [p.querySelector('.fMes').value, p.querySelector('.fTipo').value])
+    .filter(x => x[1] !== '');
+  const ini = new Date($('#inicio').value + 'T00:00:00');
+  const m0 = isNaN(ini) ? new Date().getMonth() : ini.getMonth();
+  $('#folgas').innerHTML = linhaFolga(m0) + linhaFolga((m0+1)%12);
+  /* devolve o que já tinha sido escolhido para o mês certo */
+  escolhido.forEach(([mes,tipo]) => {
+    const l = [...document.querySelectorAll('#folgas .parFolga')]
+      .find(p => p.querySelector('.fMes').value === mes);
+    if(l) l.querySelector('.fTipo').value = tipo;
+  });
+}
+$('#maisFolga').addEventListener('click', () => {
+  const n = document.querySelectorAll('#folgas .parFolga').length;
+  const ini = new Date($('#inicio').value + 'T00:00:00');
+  const m0 = isNaN(ini) ? 0 : ini.getMonth();
+  $('#folgas').insertAdjacentHTML('beforeend', linhaFolga((m0+n)%12));
+});
+function folgaOk(nome, d){
+  if(!igual(nome,'Antônio Marcos')) return true;
+  const linha = [...document.querySelectorAll('#folgas .parFolga')]
+    .find(p => { const m = p.querySelector('.fMes'); return m && +m.value === d.getMonth(); });
+  const t = linha ? linha.querySelector('.fTipo').value : '';
+  /* sem informação de folga naquele mês, ele não é designado */
+  if(t === '') return false;
+  return (d.getDate() % 2) === (t === '1' ? 1 : 0);
+}
+
+/* ============ listas de participantes ============ */
+const LISTAS_EDIT = [
+  ['lLeitor', 'Leitores do estudo bíblico', () => CICLO_LEITOR, v => CICLO_LEITOR = v],
+  ['lPres',   'Presidentes do fim de semana', () => CICLO_PRES, v => CICLO_PRES = v],
+  ['lSent',   'Leitores de A Sentinela', () => CICLO_SENT, v => CICLO_SENT = v],
+  ['lEntr',   'Indicadores de entrada', () => ENTRADA, v => ENTRADA = v],
+  ['lInt',    'Indicadores de auditório', () => INTERNO, v => INTERNO = v],
+  ['lMic',    'Microfones volantes', () => MICROFONE, v => MICROFONE = v]
+];
+const PADRAO = LISTAS_EDIT.map(([id,,ler]) => ler().slice());
+const standby = {};                        // quem saiu, guardado para voltar depois
+LISTAS_EDIT.forEach(([id]) => standby[id] = []);
+
+/* tudo fica guardado no aparelho, para não redigitar a cada vez */
+const CHAVE = 'designacoes-participantes';
+const CHAVE_PER = 'designacoes-periodo';
+/* guarda até onde você montou, para sugerir o período seguinte na próxima vez */
+function guardarPeriodo(){
+  try{
+    const ult = (resultado && resultado.leitores && resultado.leitores.datas.length)
+      ? resultado.leitores.datas[resultado.leitores.datas.length-1].toISOString().slice(0,10)
+      : $('#inicio').value;
+    localStorage.setItem(CHAVE_PER, JSON.stringify({ultima: ult, dia: diaMeio()}));
+  }catch(e){}
+}
+function periodoGuardado(){
+  try{ return JSON.parse(localStorage.getItem(CHAVE_PER) || 'null'); }catch(e){ return null; }
+}
+function guardarListas(){
+  try{
+    const bolo = {ativos:{}, standby:{}};
+    LISTAS_EDIT.forEach(([id,, ler]) => { bolo.ativos[id] = ler(); bolo.standby[id] = standby[id]; });
+    localStorage.setItem(CHAVE, JSON.stringify(bolo));
+  }catch(e){}
+}
+function recuperarListas(){
+  try{
+    const bolo = JSON.parse(localStorage.getItem(CHAVE) || '{}');
+    LISTAS_EDIT.forEach(([id,,, grava]) => {
+      if(bolo.ativos && Array.isArray(bolo.ativos[id]) && bolo.ativos[id].length)
+        grava(bolo.ativos[id]);
+      if(bolo.standby && Array.isArray(bolo.standby[id])) standby[id] = bolo.standby[id];
+    });
+  }catch(e){}
+}
+recuperarListas();
+
+function montarListas(){
+  $('#listas').innerHTML = LISTAS_EDIT.map(([id, rotulo, ler]) => {
+    const ativos = ler().map((n,k) =>
+      '<span class="ficha">' + n +
+      '<button type="button" class="tirar" data-l="' + id + '" data-k="' + k +
+      '" title="pôr em standby">&times;</button></span>').join('');
+    const fora = (standby[id]||[]).map((n,k) =>
+      '<span class="ficha off">' + n +
+      '<button type="button" class="voltar" data-l="' + id + '" data-k="' + k +
+      '" title="reativar">&#8635;</button></span>').join('');
+    return '<div class="grupoLista"><label>' + rotulo + '</label>' +
+      '<div class="fichas">' + (ativos || '<i style="color:var(--fraco)">ninguém</i>') + '</div>' +
+      '<div class="somar"><input type="text" class="novoNome" data-l="' + id +
+        '" placeholder="nome de quem vai entrar"> ' +
+        '<button type="button" class="secundario juntar" data-l="' + id + '">Acrescentar</button></div>' +
+      (fora ? '<div class="fichas"><small style="color:var(--fraco);margin-right:6px">' +
+        'em standby:</small>' + fora + '</div>' : '') + '</div>';
+  }).join('');
+}
+/* um só ouvinte para todos os botões, porque eles nascem e somem o tempo todo */
+$('#listas').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if(!b) return;
+  const lista = LISTAS_EDIT.find(l => l[0] === b.dataset.l);
+  if(!lista) return;
+  const [id,, ler, grava] = lista;
+  if(b.classList.contains('tirar')){
+    const nomes = ler().slice();
+    const [saiu] = nomes.splice(+b.dataset.k, 1);
+    if(saiu && !standby[id].some(x => igual(x,saiu))) standby[id].push(saiu);
+    grava(nomes);
+  } else if(b.classList.contains('voltar')){
+    const [volta] = standby[id].splice(+b.dataset.k, 1);
+    if(volta && !ler().some(x => igual(x,volta))) grava(ler().concat([volta]));
+  } else if(b.classList.contains('juntar')){
+    const campo = $('#listas').querySelector('.novoNome[data-l="' + id + '"]');
+    const nome = campo ? campo.value.trim() : '';
+    if(!nome) return;
+    if(!ler().some(x => igual(x,nome))) grava(ler().concat([nome]));
+    standby[id] = standby[id].filter(x => !igual(x,nome));
+  } else return;
+  guardarListas(); montarListas();
+});
+function lerListas(){ guardarListas(); }
+$('#voltaPadrao').addEventListener('click', () => {
+  LISTAS_EDIT.forEach(([id,,, grava], k) => { grava(PADRAO[k].slice()); standby[id] = []; });
+  try{ localStorage.removeItem(CHAVE); }catch(e){}
+  montarListas();
+});
+
+/* ============ quem já tem parte ============ */
+function calcularQuartas(){
+  const ini = new Date($('#inicio').value + 'T00:00:00');
+  if(isNaN(ini)) return [];
+  const ev = lerDatas($('#eventos').value);
+  const out = []; let d = ini;
+  while(out.length < ABAS.leitores.n){ if(!semReuniao(ev,d)) out.push(ajustaSuper(d)); d = somaDias(d,7); }
+  return out;
+}
+/* o PDF guarda a semana pela quarta; na semana do superintendente a data virou terça */
+function nomesDoPdf(d){
+  if(!doPdf) return null;
+  return doPdf[d.getTime()] ||
+    (d.getDay() === (diaMeio()+6)%7 ? doPdf[somaDias(d,1).getTime()] : null);
+}
+function montarOcupados(){
+  quartas = calcularQuartas();
+  $('#ocupados').innerHTML = quartas.map((d,i) => {
+    const v = (nomesDoPdf(d) || []).join(', ');
+    return '<label style="display:grid;grid-template-columns:82px 1fr;gap:10px;' +
+      'align-items:center;margin-bottom:7px"><span style="color:var(--fraco);font-size:14px">' +
+      fmt(d) + '</span><input class="mini ocupado" data-i="' + i + '" value="' +
+      v.replace(/"/g,'&quot;') + '" placeholder="' +
+      (doPdf ? 'nada no PDF para esta semana' : 'nomes separados por vírgula') + '"></label>';
+  }).join('');
+}
+document.addEventListener('change', e => {
+  if(!e.target.closest('#especiais')) return;
+  ajustarInicio(); montarOcupados();
+});
+['#inicio','#eventos','#super','#diaMeio','#diaFds'].forEach(sel => $(sel).addEventListener('change', () => {
+  if(sel === '#eventos') ajustarInicio();
+  montarFolgas(); montarOcupados();
+}));
+function ocupadosDe(d){
+  const i = quartas.findIndex(q => q.getTime() === d.getTime());
+  if(i < 0) return [];
+  const c = document.querySelector('.ocupado[data-i="' + i + '"]');
+  return c ? c.value.split(',').map(s=>s.trim()).filter(Boolean) : [];
+}
+
+/* ============ programação do meio de semana ============ */
+/* ===== leitura da apostila: linhas, itens, cânticos ===== */
+const MARCAS = {'´':'\u0301','`':'\u0300','ˆ':'\u0302','˜':'\u0303','¸':'\u0327','¨':'\u0308'};
+
+async function linhasDaPagina(pg){
+  const tc = await pg.getTextContent();
+  const its = tc.items.filter(i => i.str.trim());
+  const base = [], marcas = [];
+  its.forEach(i => (Object.keys(MARCAS).includes(i.str.trim()) ? marcas : base).push(i));
+
+  /* junta por altura e depois quebra onde há um vão grande — é assim que
+     as duas colunas se separam, sem depender de uma posição fixa na página */
+  const porY = [];
+  base.sort((a,b) => b.transform[5]-a.transform[5] || a.transform[4]-b.transform[4]);
+  base.forEach(i => {
+    let g = porY.find(g => Math.abs(g.y - i.transform[5]) < 3);
+    if(!g){ g = {y:i.transform[5], itens:[]}; porY.push(g); }
+    g.itens.push(i);
+  });
+  const linhas = [];
+  porY.forEach(g => {
+    g.itens.sort((a,b) => a.transform[4]-b.transform[4]);
+    let atual = [g.itens[0]];
+    for(let k=1;k<g.itens.length;k++){
+      const ant = g.itens[k-1], cur = g.itens[k];
+      const vao = cur.transform[4] - (ant.transform[4] + ant.width);
+      if(vao > 26){ linhas.push({y:g.y, itens:atual}); atual = []; }
+      atual.push(cur);
+    }
+    if(atual.length) linhas.push({y:g.y, itens:atual});
+  });
+
+  linhas.forEach(l => {
+    let txt = '', pos = [];
+    l.itens.forEach((i,k) => {
+      const x = i.transform[4], larg = i.width / Math.max(i.str.length,1);
+      if(k && x > l.itens[k-1].transform[4] + l.itens[k-1].width + 0.6){
+        txt += ' '; pos.push({x, w:0});
+      }
+      for(let c=0;c<i.str.length;c++) pos.push({x: x + c*larg, w: larg});
+      txt += i.str;
+    });
+    l.txt = txt.replace(/\u0131/g,'i');   // i sem pingo vira i normal
+    l.pos = pos; l.x0 = l.itens[0].transform[4];
+    l.x1 = l.itens[l.itens.length-1].transform[4] + l.itens[l.itens.length-1].width;
+  });
+
+  /* cada acento volta para a letra sob a qual foi desenhado, comparando centros */
+  marcas.forEach(m => {
+    const my = m.transform[5], mx = m.transform[4] + m.width/2, ced = m.str.trim() === '¸';
+    const cand = linhas.filter(l => mx >= l.x0 - 6 && mx <= l.x1 + 6)
+      .filter(l => ced ? Math.abs(l.y - my) < 6 : (l.y < my && l.y > my - 9));
+    const l = cand[0];
+    if(!l) return;
+    const alvo = ced ? 'cC' : 'aeiouAEIOU';
+    let melhor = -1, dist = 1e9;
+    for(let c=0;c<l.txt.length;c++){
+      if(!alvo.includes(l.txt[c])) continue;
+      const p = l.pos[c]; if(!p) continue;
+      const d = Math.abs((p.x + p.w/2) - mx);
+      if(d < dist){ dist = d; melhor = c; }
+    }
+    if(melhor >= 0 && dist < 10) (l.acentos = l.acentos || []).push([melhor, MARCAS[m.str.trim()]]);
+  });
+  linhas.forEach(l => {
+    if(l.acentos){
+      const ch = l.txt.split('');
+      l.acentos.sort((a,b)=>b[0]-a[0]).forEach(([i,mc]) => ch.splice(i+1,0,mc));
+      l.txt = ch.join('').normalize('NFC');
+    }
+  });
+  return linhas.sort((a,b) => b.y - a.y || a.x0 - b.x0);
+}
+
+function itensDaPagina(linhas){
+  const itens = [];
+  linhas.forEach((l,k) => {
+    const m = l.txt.match(/^\s*(\d{1,2})\.\s*(\D.*)$/);
+    if(!m || +m[1] > 15) return;
+    let corpo = m[2];
+    for(let j=k+1; j<linhas.length && !/\(\s*\d+\s*min\s*\)/.test(corpo); j++){
+      if(Math.abs(linhas[j].x0 - l.x0) > 30) continue;      // outra coluna
+      if(/^\s*\d{1,2}\.\s/.test(linhas[j].txt)) break;
+      corpo = corpo.endsWith('-') ? corpo.slice(0,-1) + linhas[j].txt
+                                  : corpo + ' ' + linhas[j].txt;
+    }
+    const d = corpo.match(/^(.*?)\s*\(\s*(\d+)\s*min\s*\)\s*(Considera\S*)?/);
+    if(!d) return;
+    itens.push({n:+m[1], y:l.y, x:l.x0,
+      titulo: d[1].replace(/\s+/g,' ').trim(), min:+d[2], consid: !!d[3]});
+  });
+  return itens;
+}
+function canticosDaPagina(linhas){
+  const out = [];
+  linhas.forEach(l => {
+    const m = l.txt.match(/C\S*ntico\s+(\d+)(\s+e\s+ora)?/);
+    if(m) out.push({n:+m[1], comOracao: !!m[2], y:l.y});
+  });
+  return out;
+}
+
+/* ===== a semana inteira: cabeçalho, nomes por item, seção Nossa Vida Cristã ===== */
+/* MESES e NOME_MES já estão declarados na leitura do PDF, mais acima */
+const MESES_MS = MESES;
+
+function cabecalho(linhas){
+  for(const l of linhas.filter(l => l.y > 630)){
+    const s = l.txt.normalize('NFD').replace(/[\u0300-\u036f\s]/g,'').toUpperCase();
+    const m = s.match(new RegExp('^(\\d{1,2})(?:-\\d{1,2})?DE(' + NOME_MES + ')'));
+    if(m){
+      /* tira o intervalo de datas do começo, sobra o livro e os capítulos */
+      const semData = s.replace(new RegExp('^\\d{1,2}(-\\d{1,2})?DE(' + NOME_MES + ')' +
+        '([^A-Z0-9]*\\d{1,2}\\S{0,3}DE(' + NOME_MES + '))?'), '')
+        .replace(/^[^A-ZÇÃÉÍÚÓÁÊÔ]+/, '');
+      const r = semData.match(/^([A-ZÇÃÉÍÚÓÁÊÔ]+?)(\d+\s*-\s*\d+)/);
+      return {dia:+m[1], mes:MESES_MS[m[2]], leitura: r ? r[1]+' '+r[2].replace(/\s/g,'') : semData};
+    }
+  }
+  return null;
+}
+/* o nome pertence ao item logo abaixo dele, na mesma coluna */
+function casarNomes(itens, anots, marcoFinal){
+  const nomes = {}; let presidente = null, oracao = null;
+  anots.forEach(a => {
+    if(a.y > 630){ presidente = a.txt; return; }
+    if(marcoFinal && Math.abs(a.y - marcoFinal.y) < 18 && a.x > 200){ oracao = a.txt; return; }
+    const mesmaCol = itens.filter(i => Math.abs((i.x < 250 ? 0 : 1) - (a.x < 250 ? 0 : 1)) === 0);
+    let alvo = null, custo = 1e9;
+    mesmaCol.forEach(i => {
+      const d = i.y <= a.y ? (a.y - i.y) : (i.y - a.y) * 3;   // preferir o item de baixo
+      if(d >= 0 && d < custo){ custo = d; alvo = i; }
+    });
+    if(alvo) (nomes[alvo.n] = nomes[alvo.n] || []).push(a.txt);
+  });
+  return {nomes, presidente, oracao};
+}
+
+/* ===== preenchimento do modelo Word da programação do meio de semana ===== */
+const RX_TR = /<w:tr[ >][\s\S]*?<\/w:tr>/g;
+const RX_TC = /<w:tc>[\s\S]*?<\/w:tc>/g;
+const RX_T  = /(<w:t(?: [^>\/]*)?>)([\s\S]*?)(<\/w:t>)/g;
+
+/* troca o texto de uma célula, mantendo a formatação do primeiro trecho */
+function porTexto(tr, idx, valor){
+  const tcs = tr.match(RX_TC) || [];
+  if(idx >= tcs.length) return tr;
+  /* célula vazia no modelo não tem onde escrever: empresta um trecho de outra célula */
+  if(!RX_T.test(tcs[idx])){
+    RX_T.lastIndex = 0;
+    const doadora = tcs.find(t => /<w:r[ >][\s\S]*?<w:t/.test(t));
+    if(!doadora) return tr;
+    const run = doadora.match(/<w:r[ >][\s\S]*?<\/w:r>/)[0];
+    const alvo = tcs[idx].replace(/<\/w:p>/, run + '</w:p>');
+    tr = tr.replace(tcs[idx], alvo);
+    tcs[idx] = alvo;
+  }
+  RX_T.lastIndex = 0;
+  let primeiro = true;
+  const novo = tcs[idx].replace(RX_T, (m,a,b,c) => {
+    if(primeiro){
+      primeiro = false;
+      const abre = a.includes('xml:space') ? a : a.slice(0,-1) + ' xml:space="preserve">';
+      return abre + String(valor).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + c;
+    }
+    return a + c;
+  });
+  return tr.replace(tcs[idx], novo);
+}
+
+/* o modelo que o Fabrício sobe vem preenchido e pode ter uma ou duas semanas.
+   Em vez de contar linhas fixas, achamos cada parte pelo que está escrito nela. */
+function textoDaLinha(tr){
+  return (tr.match(RX_TC) || []).map(tc =>
+    (tc.match(/<w:t(?: [^>\/]*)?>[\s\S]*?<\/w:t>/g) || [])
+      .map(t => t.replace(/<[^>]+>/g,'')).join('').trim());
+}
+function analisarBloco(trs, ini, fim){
+  const b = {ini, fim, itens:[]};
+  for(let i=ini;i<=fim;i++){
+    const c = textoDaLinha(trs[i]);
+    const t0 = c[0] || '', t1 = c[1] || '';
+    if(t0.startsWith('TESOUROS')) b.tesouros = i;
+    else if(t0.startsWith('FAÇA')) b.faca = i;
+    else if(t0.startsWith('NOSSA')) b.nossa = i;
+    if(/^\d{1,2}\.\s/.test(t1)) b.itens.push(i);
+    if(/C\S*ntico/.test(t1)){
+      if(/ora/.test(t1)){ if(b.cant1 === undefined) b.cant1 = i; else b.cant3 = i; }
+      else b.cant2 = i;
+    }
+    if(/Coment\S*rios\s*finais/.test(t1)) b.finais = i;
+  }
+  b.minist = b.itens.filter(i => i > b.faca && i < b.nossa);
+  b.nvcItens = b.itens.filter(i => i > b.nossa);
+  b.estudo = b.nvcItens[b.nvcItens.length-1];
+  b.nvc = b.nvcItens.slice(0,-1);
+  b.tesItens = b.itens.filter(i => i > b.tesouros && i < b.faca);
+  return b;
+}
+
+function montarBloco(trs, mol, s, leitorEstudo, nomeOficial){
+  const minist = s.itens.filter(i => i.n >= 4 && i.n < s.nvc);
+  const nvcItens = s.itens.filter(i => i.n >= s.nvc);
+  const estudo = nvcItens[nvcItens.length-1];
+  const nvc = nvcItens.slice(0,-1);
+  const N = n => nomeOficial(n);
+  const pres = N(s.presidente);
+  /* a palavra "Consideração" fica só na apostila, não vai para a folha */
+  const tit = i => i.n + '. ' + i.titulo + ' (' + i.min + ' min)';
+  const nomeDe = i => (s.nomes[i.n] || []).map(N).join('/');
+  const linha = i => trs[i];
+  const saida = [];
+  const copiar = (de, ate) => { for(let i=de;i<=ate;i++) saida.push(trs[i]); };
+
+  /* cabeçalho da semana até a tarja dos Tesouros */
+  copiar(mol.ini, mol.tesouros);
+  saida[mol.cant1 - mol.ini] = porTexto(porTexto(linha(mol.cant1), 1,
+    'Cântico ' + s.cant[0] + ' e oração'), 3, pres);
+  saida[0] = porTexto(porTexto(saida[0], 0, s.dataTexto + ' | ' + s.leitura), 2, pres);
+
+  /* os três dos Tesouros */
+  mol.tesItens.forEach((li,k) => {
+    const it = s.itens[k];
+    let tr = porTexto(linha(li), 1, tit(it));
+    tr = porTexto(tr, k === 2 ? 4 : 2, nomeDe(it));
+    saida.push(tr);
+  });
+  copiar(mol.tesItens[mol.tesItens.length-1] + 1, mol.faca);   // espaço + tarja do Ministério
+
+  /* ministério: repete o modelo de linha quantas vezes precisar */
+  minist.forEach(i => {
+    const nome = nomeDe(i);
+    let tr = porTexto(linha(mol.minist[0]), 1, tit(i));
+    tr = porTexto(tr, 2, nome.includes('/') ? 'Estudante/ajudante:' : 'Estudante:');
+    saida.push(porTexto(tr, 4, nome));
+  });
+  copiar(mol.minist[mol.minist.length-1] + 1, mol.cant2);      // espaço, tarja e cântico
+  saida[saida.length-1] = porTexto(linha(mol.cant2), 1, 'Cântico ' + s.cant[1]);
+
+  nvc.forEach(i => saida.push(porTexto(porTexto(linha(mol.nvc[0]), 1, tit(i)), 3, nomeDe(i))));
+  saida.push(porTexto(porTexto(linha(mol.estudo), 1, tit(estudo)), 3,
+    nomeDe(estudo) + '/' + leitorEstudo));
+  saida.push(porTexto(linha(mol.finais), 2, pres));
+  saida.push(porTexto(porTexto(linha(mol.cant3), 1,
+    'Cântico ' + s.cant[2] + ' e oração'), 3, N(s.oracao || '')));
+  return saida;
+}
+
+function gerarFolha(xml, semanas, leitores, nomeOficial){
+  const trs = xml.match(RX_TR);
+  const pres = trs.map((t,i) => textoDaLinha(t).includes('Presidente:') ? i : -1).filter(i => i >= 0);
+  if(!pres.length) throw new Error('modelo sem bloco de semana');
+  const fimBloco = i => {
+    const prox = pres.find(p => p > pres[i]);
+    let f = (prox === undefined ? trs.length : prox) - 1;
+    while(f > pres[i] && !/C\S*ntico/.test((textoDaLinha(trs[f])[1]||''))) f--;
+    return f;
+  };
+  const mol = analisarBloco(trs, pres[0], fimBloco(0));
+  const CAB = trs.slice(0, pres[0]);
+  /* se o modelo tem só uma semana, não existe separador pronto:
+     usamos as linhas em branco que sobram no fim dele */
+  const SEP = pres.length > 1 ? trs.slice(fimBloco(0)+1, pres[1])
+                              : trs.slice(fimBloco(0)+1, Math.min(fimBloco(0)+5, trs.length));
+  let novo = CAB.slice();
+  semanas.forEach((s,k) => {
+    if(k) novo = novo.concat(SEP.length ? SEP : []);
+    novo = novo.concat(montarBloco(trs, mol, s, leitores[k] || '', nomeOficial));
+  });
+  const ini = xml.indexOf(trs[0]);
+  const fim = xml.lastIndexOf(trs[trs.length-1]) + trs[trs.length-1].length;
+  return xml.slice(0,ini) + novo.join('') + xml.slice(fim);
+}
+let zipMS = null, xmlMS = '', semanasPdf = [];
+$('#arqMS').addEventListener('change', e => e.target.files[0] && abrirMS(e.target.files[0]));
+['dragover','dragleave','drop'].forEach(ev => $('#soltaMS').addEventListener(ev, e => {
+  e.preventDefault();
+  $('#soltaMS').classList.toggle('sobre', ev === 'dragover');
+  if(ev === 'drop' && e.dataTransfer.files[0]) abrirMS(e.dataTransfer.files[0]);
+}));
+async function abrirMS(file){
+  try{
+    zipMS = await JSZip.loadAsync(file);
+    xmlMS = await zipMS.file('word/document.xml').async('string');
+    const n = (xmlMS.match(/<w:tr[ >]/g)||[]).length;
+    $('#msTxt').innerHTML = '<span class="ok">Modelo carregado</span><br>' +
+      '<small style="color:var(--fraco)">' + n + ' linhas · ' + file.name + '</small>';
+    $('#cMS').checked = semanasPdf.length > 0;
+  }catch(err){
+    $('#msTxt').innerHTML = '<span style="color:var(--vinho)">Não consegui ler este modelo.</span>';
+    zipMS = null;
+  }
+}
+const ordemLeitura = (pag,col,y) => pag*1e6 + col*1e5 + (1000 - y);
+
+/* ============ discursos públicos ============ */
+let brutoDisc = [];
+
+$('#arqDisc').addEventListener('change', e => e.target.files[0] && abrirDisc(e.target.files[0]));
+['dragover','dragleave','drop'].forEach(ev => $('#soltaDisc').addEventListener(ev, e => {
+  e.preventDefault();
+  $('#soltaDisc').classList.toggle('sobre', ev === 'dragover');
+  if(ev === 'drop' && e.dataTransfer.files[0]) abrirDisc(e.dataTransfer.files[0]);
+}));
+
+async function abrirDisc(file){
+  $('#discTxt').textContent = 'Lendo…';
+  try{
+    let linhas = [];
+    if(/\.pdf$/i.test(file.name)){
+      const lib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
+      const doc = await lib.getDocument({data: await file.arrayBuffer()}).promise;
+      for(let n=1;n<=doc.numPages;n++){
+        const tc = await (await doc.getPage(n)).getTextContent();
+        const porLinha = {};
+        tc.items.forEach(i => { const y = Math.round(i.transform[5]);
+          (porLinha[y] = porLinha[y] || []).push(i); });
+        Object.keys(porLinha).map(Number).sort((a,b)=>b-a).forEach(y => {
+          const t = porLinha[y].sort((a,b)=>a.transform[4]-b.transform[4])
+            .map(i=>i.str).join(' ').replace(/\s+/g,' ').trim();
+          if(t) linhas.push(t);
+        });
+      }
+    } else {
+      $('#discTxt').textContent = 'Reconhecendo o texto da foto… isso leva alguns segundos.';
+      const r = await Tesseract.recognize(file, 'por');
+      linhas = r.data.text.split('\n').map(l => l.replace(/\s+/g,' ').trim()).filter(Boolean);
+    }
+    brutoDisc = linhas;
+    $('#discTxt').innerHTML = '<span class="ok">' + linhas.length + ' linhas lidas</span><br>' +
+      '<small style="color:var(--fraco)">confira e corrija abaixo antes de gerar</small>';
+    montarTabelaDisc();
+  }catch(err){
+    $('#discTxt').innerHTML = '<span style="color:var(--vinho)">Não consegui ler este arquivo. ' +
+      'Preencha à mão abaixo.</span>';
+    brutoDisc = []; montarTabelaDisc();
+  }
+}
+
+/* separa cada linha em tema e orador pelo traço, barra ou espaço largo */
+function partirLinha(l){
+  /* tira do começo a data e a numeração que a folha costuma trazer */
+  const limpo = l.replace(/^\s*\d{1,2}[\/.]\d{1,2}([\/.]\d{2,4})?\s*[-–—:]?\s*/, '')
+                 .replace(/^\s*\d{1,2}\s*[).:-]\s*/, '');
+  const m = limpo.match(/^(.{8,}?)\s*[-–—|]\s*(.{3,40})$/) ||
+            limpo.match(/^(.{8,}?)\s{3,}(.{3,40})$/);
+  return m ? [m[1].trim(), m[2].trim()] : [limpo.trim(), ''];
+}
+let quantosDisc = DISCURSOS.n;
+$('#maisDisc').addEventListener('click', () => { quantosDisc++; montarTabelaDisc(true); });
+$('#menosDisc').addEventListener('click', () => {
+  if(quantosDisc > 1){ quantosDisc--; montarTabelaDisc(true); }
+});
+function montarTabelaDisc(manter){
+  const ev = lerDatas($('#eventos').value);
+  const dom = [];
+  /* data própria dos discursos, se houver; senão a da etapa 1 */
+  let d = new Date(($('#iniDisc').value || $('#inicio').value) + 'T00:00:00');
+  if(isNaN(d)) return;
+  while(d.getDay() !== diaFds()) d = somaDias(d, 1);
+  while(dom.length < quantosDisc){ if(!semReuniao(ev,d)) dom.push(d); d = somaDias(d,7); }
+  const jaTinha = manter ? coletarDisc(true) : null;
+  const uteis = brutoDisc.filter(l => l.length > 8 && /[a-zà-ú]/i.test(l));
+  /* se a folha trouxe mais discursos do que os 9 de sempre, já abre com todos */
+  if(!manter && uteis.length > quantosDisc) quantosDisc = uteis.length;
+  $('#tabDisc').innerHTML = '<table class="pl" style="margin-top:16px"><caption>' +
+    DISCURSOS.titulo + '</caption><tr><th>DATA</th><th>TEMA</th><th>ORADOR</th></tr>' +
+    dom.map((x,i) => {
+      let [tema, orador] = uteis[i] ? partirLinha(uteis[i]) : ['',''];
+      if(jaTinha && jaTinha[i]){ tema = jaTinha[i].tema; orador = jaTinha[i].orador; }
+      return '<tr><td class="dt">' + fmt(x) + '/' + x.getFullYear() + '</td>' +
+        '<td><input class="mini dTema" data-i="' + i + '" value="' +
+          tema.replace(/"/g,'&quot;') + '"></td>' +
+        '<td><input class="mini dOrad" data-i="' + i + '" value="' +
+          orador.replace(/"/g,'&quot;') + '"></td></tr>';
+    }).join('') + '</table>' +
+    '<p class="dica" style="margin:10px 0 0 0">Linha em branco não vai para a planilha.</p>';
+  $('#cDisc').checked = true;
+  $('#acoesDisc').hidden = false;
+  window._domDisc = dom;
+}
+function coletarDisc(todas){
+  const dom = window._domDisc || [];
+  return dom.map((x,i) => {
+    const t = document.querySelector('.dTema[data-i="' + i + '"]');
+    const o = document.querySelector('.dOrad[data-i="' + i + '"]');
+    return {data:x, tema: t ? t.value.trim() : '', orador: o ? o.value.trim() : ''};
+  }).filter(l => todas || l.tema);
+}
+
+/* a aba de discursos vem com 9 blocos de duas linhas; se a lista for maior,
+   copiamos o último bloco quantas vezes precisar, junto com as mesclagens */
+function garantirBlocos(xml, quantos){
+  if(quantos <= DISCURSOS.n) return xml;
+  const ultTopo = DISCURSOS.linha0 + (DISCURSOS.n - 1) * DISCURSOS.passo;   // 20
+  const pega = n => (xml.match(new RegExp('<row [^>]*r="' + n + '"[\\s\\S]*?<\\/row>')) || [])[0];
+  const molde = [pega(ultTopo), pega(ultTopo + 1)];
+  if(!molde[0] || !molde[1]) return xml;
+  let novas = '';
+  const merges = [];
+  for(let i = DISCURSOS.n; i < quantos; i++){
+    const topo = DISCURSOS.linha0 + i * DISCURSOS.passo;
+    molde.forEach((linha, k) => {
+      const de = ultTopo + k, para = topo + k;
+      novas += linha.replace(new RegExp('r="' + de + '"', 'g'), 'r="' + para + '"')
+                    .replace(new RegExp('r="([B-H])' + de + '"', 'g'), 'r="$1' + para + '"');
+    });
+    ['B','C','D'].forEach(c =>
+      merges.push('<mergeCell ref="' + c + topo + ':' + c + (topo+1) + '"/>'));
+  }
+  xml = xml.replace('</sheetData>', novas + '</sheetData>');
+  const bloco = xml.match(/<mergeCells count="(\d+)">/);
+  if(bloco){
+    xml = xml.replace(bloco[0], '<mergeCells count="' + (+bloco[1] + merges.length) + '">' + merges.join(''));
+  }
+  /* a última linha da tabela mudou, então a dimensão também */
+  xml = xml.replace(/<dimension ref="([A-Z]+)(\d+):([A-Z]+)(\d+)"\/>/,
+    (m,a,b,c,d) => '<dimension ref="' + a + b + ':' + c +
+      Math.max(+d, DISCURSOS.linha0 + quantos*DISCURSOS.passo) + '"/>');
+  return xml;
+}
+
+/* ============ limpeza pós-reunião (Word) ============ */
+let zipLimp = null, xmlLimp = '', ultimoGrupo = 0;
+const GRUPOS = 6;
+
+function linhasDoWord(xml){
+  return (xml.match(/<w:tr[ >][\s\S]*?<\/w:tr>/g) || []).map(tr => ({
+    xml: tr,
+    celulas: (tr.match(/<w:tc>[\s\S]*?<\/w:tc>/g) || []).map(tc =>
+      (tc.match(/<w:t(?: [^>\/]*)?>[\s\S]*?<\/w:t>/g) || [])
+        .map(t => t.replace(/<[^>]+>/g,'')).join('').trim())
+  }));
+}
+const ehSemana = c => /^\d{1,2}\/\d{1,2}\s*a\s*\d{1,2}\/\d{1,2}$/.test(c || '');
+
+$('#arqLimp').addEventListener('change', e => e.target.files[0] && abrirLimp(e.target.files[0]));
+['dragover','dragleave','drop'].forEach(ev => $('#soltaLimp').addEventListener(ev, e => {
+  e.preventDefault();
+  $('#soltaLimp').classList.toggle('sobre', ev === 'dragover');
+  if(ev === 'drop' && e.dataTransfer.files[0]) abrirLimp(e.dataTransfer.files[0]);
+}));
+async function abrirLimp(file){
+  try{
+    zipLimp = await JSZip.loadAsync(file);
+    xmlLimp = await zipLimp.file('word/document.xml').async('string');
+    const dados = linhasDoWord(xmlLimp).filter(l => ehSemana(l.celulas[0]));
+    const ultimo = dados.length ? dados[dados.length-1].celulas[1] : '';
+    ultimoGrupo = +(String(ultimo).match(/(\d+)/) || [0,0])[1];
+    $('#limpTxt').innerHTML = '<span class="ok">Word carregado</span><br>' +
+      '<small style="color:var(--fraco)">' + dados.length + ' semanas · terminou no ' +
+      (ultimo || '—') + ', o próximo rodízio abre no GRUPO ' +
+      (ultimoGrupo % GRUPOS + 1) + '</small>';
+    $('#cLimp').checked = true;
+  }catch(err){
+    $('#limpTxt').innerHTML = '<span style="color:var(--vinho)">Não consegui ler este Word.</span>';
+    zipLimp = null;
+  }
+}
+/* a semana de evento sai da lista E o grupo dela perde a vez */
+function montarLimpeza(primeiraReuniao, eventos){
+  let d = somaDias(primeiraReuniao, -((primeiraReuniao.getDay()+6)%7));  // segunda daquela semana
+  let g = ultimoGrupo, saltados = [];
+  const linhas = [];
+  while(linhas.length < 16){
+    g = g % GRUPOS + 1;
+    const fim = somaDias(d,6);
+    if(semanaMorta(eventos, d)) saltados.push(fmt(d) + ' a ' + fmt(fim) + ' (GRUPO ' + g + ')');
+    else linhas.push([fmt(d) + ' a ' + fmt(fim), 'GRUPO ' + g]);
+    d = somaDias(d,7);
+  }
+  const notas = ['O rodízio abre no GRUPO ' + linhas[0][1].replace('GRUPO ','') +
+    ', seguindo o que estava no Word.'];
+  if(saltados.length) notas.push('Semana de evento fora da lista, e o grupo perdeu a vez: ' +
+    saltados.join('; ') + '.');
+  return {linhas, notas};
+}
+function gravarLimpeza(linhas){
+  let xml = xmlLimp;
+  const trs = linhasDoWord(xml);
+  const dados = trs.filter(l => ehSemana(l.celulas[0]) || l.celulas.every(c => !c));
+  dados.forEach((linha, i) => {
+    let novo = linha.xml;
+    if(i < linhas.length){
+      const tcs = novo.match(/<w:tc>[\s\S]*?<\/w:tc>/g) || [];
+      tcs.forEach((tc, k) => {
+        if(k > 1) return;
+        let primeiro = true;
+        /* o (?![^>]*\/>) evita casar com <w:t/>, que não tem par de fechamento */
+        const tcNovo = tc.replace(/(<w:t(?: [^>\/]*)?>)([\s\S]*?)(<\/w:t>)/g, (m,a,b,c) => {
+          if(primeiro){
+            primeiro = false;
+            const abre = a.includes('xml:space') ? a : a.slice(0,-1) + ' xml:space="preserve">';
+            return abre + linhas[i][k] + c;
+          }
+          return a + c;
+        });
+        novo = novo.replace(tc, tcNovo);
+      });
+      xml = xml.replace(linha.xml, novo);
+    } else {
+      xml = xml.replace(linha.xml, '');   // linhas sobrando saem
+    }
+  });
+  return xml;
+}
+
+/* ============ montagem das listas ============ */
+const posDe = (ciclo, nome) => ciclo.findIndex(n => igual(n, nome||''));
+const anda = (ciclo, p) => { const q = p + 1;
+  return [ciclo[((q % ciclo.length) + ciclo.length) % ciclo.length], q]; };
+
+function motivoLeitor(n, d){
+  if(ocupadosDe(d).some(o => igual(o,n))) return 'já tem parte na programação dessa quarta';
+  /* nomes vindos da planilha só saem por choque de verdade, nunca por preferência */
+  if(!folgaOk(n,d)) return 'o dia ' + d.getDate() + ' não é dia de folga dele';
+  return null;
+}
+function montarLeitores(datas){
+  const ja = jaNaPlanilha.leitores || {};
+  const seq = [], mantidos = [];
+  let pos = posDe(CICLO_LEITOR, (ultimos.leitores||[])[0]);
+  datas.forEach(d => {
+    const g = ja[d.getTime()];
+    if(g && g[0]){ seq.push(g[0]); mantidos.push(fmt(d));
+      const k = posDe(CICLO_LEITOR, g[0]); if(k>=0) pos = k;
+    } else { const [v,q] = anda(CICLO_LEITOR, pos); seq.push(v); pos = q; }
+  });
+  const notas = [], mexidas = new Set();
+  if(mantidos.length) notas.push('Mantive as designações que já estavam na planilha nos dias ' +
+    mantidos.join(', ') + '.');
+  for(let i=0;i<seq.length;i++){
+    const razao = motivoLeitor(seq[i], datas[i]);
+    if(!razao) continue;
+    let feito = false;
+    for(let j=i+1;j<seq.length;j++){
+      if(!motivoLeitor(seq[j],datas[i]) && !motivoLeitor(seq[i],datas[j])){
+        notas.push('No dia ' + fmtL(datas[i]) + ', ' + seq[i] + ' ' + razao + '. Por isso ' +
+          seq[i] + ' passou a ler no dia ' + fmtL(datas[j]) + ', e ' + seq[j] +
+          ' assumiu a leitura no dia ' + fmtL(datas[i]) + '.');
+        [seq[i],seq[j]] = [seq[j],seq[i]];
+        mexidas.add(i); mexidas.add(j); feito = true; break;
+      }
+    }
+    if(!feito) notas.push('No dia ' + fmtL(datas[i]) + ', ' + seq[i] + ' ' + razao +
+      ', e não encontrei ninguém livre para trocar de lugar com ele. Confira essa data.');
+  }
+  return {seq, notas, mexidas};
+}
+
+/* leitores das quartas vizinhas — ninguém serve em duas reuniões seguidas */
+let leitorPorQuarta = {};
+function serveVizinho(n, d){
+  const antes = leitorPorQuarta[somaDias(d,-4).getTime()];
+  const dps   = leitorPorQuarta[somaDias(d, 3).getTime()];
+  if(antes && igual(antes,n)) return 'ele já lê na reunião de ' + fmtL(somaDias(d,-4));
+  if(dps && igual(dps,n))     return 'ele já lê na reunião de ' + fmtL(somaDias(d, 3));
+  return null;
+}
+function motivoFds(p, l, d){
+  if(igual(p,l)) return 'ele ficaria como presidente e leitor no mesmo domingo';
+  const viz = serveVizinho(l, d);
+  if(viz) return viz;
+  const dois = sem(p) + '|' + sem(l);
+  if(dois.includes('PETERSON') && dois.includes('GILBERTO'))
+    return 'Peterson e Gilberto não podem ficar no mesmo dia';
+  if(!folgaOk(l,d)) return 'o dia ' + d.getDate() + ' não é dia de folga dele';
+  return null;
+}
+function motivoPres(p, l, d){
+  if(igual(p,l)) return 'ele ficaria como presidente e leitor no mesmo domingo';
+  const dois = sem(p) + '|' + sem(l);
+  if(dois.includes('PETERSON') && dois.includes('GILBERTO'))
+    return 'Peterson e Gilberto não podem ficar no mesmo dia';
+  return serveVizinho(p, d);
+}
+function montarFds(datas, porQuarta){
+  leitorPorQuarta = porQuarta || {};
+  const ja = jaNaPlanilha.fds || {};
+  const pres = [], leit = [], mantidos = [];
+  let pP = posDe(CICLO_PRES, (ultimos.fds||[])[0]);
+  let pS = posDe(CICLO_SENT, (ultimos.fds||[])[1]);
+  datas.forEach(d => {
+    const g = ja[d.getTime()];
+    if(g && (g[0]||g[1])) mantidos.push(fmt(d));
+    if(g && g[0]){ pres.push(g[0]); const k = posDe(CICLO_PRES,g[0]); if(k>=0) pP = k; }
+    else { const [v,q] = anda(CICLO_PRES, pP); pres.push(v); pP = q; }
+    if(g && g[1]){ leit.push(g[1]); const k = posDe(CICLO_SENT,g[1]); if(k>=0) pS = k; }
+    else { const [v,q] = anda(CICLO_SENT, pS); leit.push(v); pS = q; }
+  });
+  const notas = [], mexidas = new Set();
+  if(mantidos.length) notas.push('Mantive as designações que já estavam na planilha nos dias ' +
+    mantidos.join(', ') + '.');
+  for(let i=0;i<pres.length;i++){
+    const razao = motivoPres(pres[i], leit[i], datas[i]);
+    if(!razao) continue;
+    let feito = false;
+    for(let j=i+1;j<pres.length;j++){
+      if(!motivoPres(pres[j],leit[i],datas[i]) && !motivoPres(pres[i],leit[j],datas[j])){
+        notas.push('No dia ' + fmtL(datas[i]) + ', ' + pres[i] + ' não podia presidir porque ' +
+          razao + '. Por isso ' + pres[i] + ' passou a presidir no dia ' + fmtL(datas[j]) +
+          ', e ' + pres[j] + ' assumiu a presidência no dia ' + fmtL(datas[i]) + '.');
+        [pres[i],pres[j]] = [pres[j],pres[i]];
+        mexidas.add(i); mexidas.add(j); feito = true; break;
+      }
+    }
+    if(!feito) notas.push('No dia ' + fmtL(datas[i]) + ', ' + pres[i] + ' não pode presidir porque ' +
+      razao + ', e não encontrei outro domingo para trocar. Confira essa data.');
+  }
+  for(let i=0;i<leit.length;i++){
+    const razao = motivoFds(pres[i], leit[i], datas[i]);
+    if(!razao) continue;
+    let feito = false;
+    for(let j=i+1;j<leit.length;j++){
+      if(!motivoFds(pres[i],leit[j],datas[i]) && !motivoFds(pres[j],leit[i],datas[j])){
+        notas.push('No dia ' + fmtL(datas[i]) + ', ' + leit[i] + ' não podia ler porque ' +
+          razao + '. Por isso ' + leit[i] + ' passou a ler no dia ' + fmtL(datas[j]) + ', e ' +
+          leit[j] + ' assumiu a leitura no dia ' + fmtL(datas[i]) + '.');
+        [leit[i],leit[j]] = [leit[j],leit[i]];
+        mexidas.add(i); mexidas.add(j); feito = true; break;
+      }
+    }
+    if(!feito) notas.push('No dia ' + fmtL(datas[i]) + ', ' + leit[i] + ' não pode ler porque ' +
+      razao + ', e não encontrei ninguém livre para trocar de lugar com ele. Confira essa data.');
+  }
+  return {pres, leit, notas, mexidas};
+}
+
+function montarIndicadores(datas, porQuarta, porDomingo){
+  /* quem já está designado em cada reunião, contando as outras listas */
+  const daReuniao = d => {
+    const fora = [];
+    if(porQuarta[d.getTime()]) fora.push(porQuarta[d.getTime()]);
+    (porDomingo[d.getTime()]||[]).forEach(x => fora.push(x));
+    return fora;
+  };
+  const ja = jaNaPlanilha.ind || {};
+  const uso = {}, mesFab = new Set(), sol = [], mantidos = [], ajustes = [];
+  /* quantas vezes cada um já ficou em cada posição — assim quem serve em duas
+     posições, como o Natanael, aparece nas duas em vez de travar numa só */
+  const usoPos = [{},{},{},{}];
+  const ultimoPapel = {};        // em que posição cada um esteve da última vez
+  const media = () => { const v = Object.values(uso); 
+    return v.length ? v.reduce((a,b)=>a+b,0)/v.length : 0; };
+  /* a chave é o nome normalizado: na planilha vem NATANAEL e no ciclo Natanael,
+     e sem isso a mesma pessoa era contada como duas */
+  const marcar = (esc, dir) => esc.forEach((n,k) => {
+    const c = sem(n);
+    uso[c] = (uso[c]||0) + dir;
+    const j = k === 3 ? 2 : k;                      // os dois microfones contam juntos
+    usoPos[j][c] = (usoPos[j][c]||0) + dir;
+    if(dir > 0) ultimoPapel[c] = j;
+  });
+
+  /* choque de verdade: a pessoa já está ocupada naquele dia */
+  const choque = (n,d) => {
+    const dom = ehFds(d);
+    if(!dom && ocupadosDe(d).some(o => igual(o,n))) return 'tem parte na programação dessa semana';
+    if(!dom && porQuarta[d.getTime()] && igual(porQuarta[d.getTime()],n))
+      return 'é o leitor do estudo bíblico nessa quarta';
+    if(dom && (porDomingo[d.getTime()]||[]).some(x => igual(x,n)))
+      return 'já preside ou lê A Sentinela nesse domingo';
+    if(!folgaOk(n,d)) return 'o dia ' + d.getDate() + ' não é dia de folga dele';
+    return null;
+  };
+  /* preferências: valem só para quem o app escolhe do zero */
+  const livre = (n,d) => {
+    if(choque(n,d)) return false;
+    const dom = ehFds(d);
+    if(!dom && SO_DOMINGO.some(x => igual(x,n))) return false;
+    if(!dom && EVITAR_QUARTA.some(x => igual(x,n))) return false;
+    if(igual(n,'Fabrício') && (d.getDate() < 10 || d.getDate() > 20)) return false;
+    return true;
+  };
+
+  /* quem tem poucas datas disponíveis (folga, só domingo, só fim de semana)
+     precisa entrar quando pode, senão nunca chega às outras posições */
+  const disponivel = {};
+  [ENTRADA, INTERNO, MICROFONE].forEach(lista => lista.forEach(n => {
+    const c = sem(n);
+    if(disponivel[c] === undefined)
+      disponivel[c] = datas.filter(d => livre(n,d)).length;
+  }));
+  const escassez = n => { const c = sem(n);
+    const d = disponivel[c] === undefined ? datas.length : disponivel[c];
+    return (1 - d / Math.max(datas.length,1)) * 8;   // 0 para quem pode sempre
+  };
+  function resolver(i){
+    if(i === datas.length) return true;
+    const d = datas[i];
+    /* ninguém pode servir em duas reuniões seguidas, em nenhuma função */
+    const antes = i ? (sol[i-1]||[]).concat(daReuniao(datas[i-1])).map(sem) : [];
+    const agora = daReuniao(d).map(sem);
+    /* quem já é leitor ou presidente na reunião SEGUINTE também não entra hoje */
+    const depois = (i+1 < datas.length ? daReuniao(datas[i+1]) : []).map(sem);
+    const g = ja[d.getTime()] || [];
+    const LISTAS = [ENTRADA, INTERNO, MICROFONE, MICROFONE];
+    const NOMEPOS = ['indicador de entrada','indicador de auditório',
+                     'microfone volante','microfone volante'];
+
+    /* o que já estava marcado nunca é abandonado; só sai quem tem choque de verdade */
+    const fixos = [null,null,null,null];
+    const usados = [];
+    for(let k=0;k<4;k++){
+      const n = g[k];
+      if(!n) continue;
+      /* além do choque, a posição precisa ser permitida para essa pessoa */
+      const razao = choque(n,d) ||
+        (LISTAS[k].some(x => igual(x,n)) ? null : 'ele não entra como ' + NOMEPOS[k]);
+      const repetido = usados.some(u => igual(u,n));
+      if(!razao && !repetido){ fixos[k] = n; usados.push(n); }
+      else if(razao) ajustes.push('No dia ' + fmtL(d) + ', ' + n + ' saiu porque ' + razao + '.');
+    }
+    if(fixos.some(Boolean) && !mantidos.includes(fmt(d))) mantidos.push(fmt(d));
+
+    const opcoes = LISTAS.map((p,k) => {
+      if(fixos[k]) return [fixos[k]];
+      const j = k === 3 ? 2 : k;
+      /* nota menor = entra primeiro. Peso 3 no total de participações, 1 na
+         posição, e um empurrão para quem acabou de ficar nessa mesma posição */
+      const nota = n => { const c = sem(n);
+        return (uso[c]||0)*3 + (usoPos[j][c]||0) + (ultimoPapel[c] === j ? 2 : 0)
+          /* quem já serviu na porta e ainda não apareceu nesta posição entra na
+             frente: é o que tira do porteiro a sina de só abrir a porta */
+          - ((j === 1 || j === 2) && (usoPos[j][c]||0) === 0 && (usoPos[0][c]||0) >= 1 ? 9 : 0)
+          - escassez(n); };
+      /* Rodízio entre posições: quem serve em mais de uma só é chamado para
+         aquela em que apareceu menos vezes. Assim ninguém fica preso na porta. */
+      const podeEm = n => [0,1,2].filter(x =>
+        (x === 0 ? ENTRADA : x === 1 ? INTERNO : MICROFONE).some(y => igual(y,n)));
+      const naVezDele = n => {
+        const ps = podeEm(n), c = sem(n);
+        if(ps.length < 2) return true;
+        const menor = Math.min.apply(null, ps.map(x => usoPos[x][c]||0));
+        return (usoPos[j][c]||0) === menor;
+      };
+      const pool = p.filter(n => livre(n,d) && !antes.includes(sem(n)) &&
+                                 !agora.includes(sem(n)) && !depois.includes(sem(n)));
+      /* na porta, quem já esteve lá mais vezes que nas outras posições que também
+         pode ocupar sai da fila desta data — é o que evita ficar preso na porta */
+      /* quanto a porta já pesa em relação às outras posições que a pessoa ocupa */
+      const pesoPorta = n => { const c = sem(n), ps = podeEm(n);
+        if(ps.length < 2) return 0;
+        const outras = ps.filter(x => x !== 0).map(x => usoPos[x][c]||0);
+        return (usoPos[0][c]||0) - Math.min.apply(null, outras); };
+      let soltos = pool;
+      if(k === 0){
+        soltos = pool.filter(naVezDele);
+        /* se todo mundo já está desequilibrado, escolhe o menos desequilibrado
+           em vez de pegar qualquer um — assim ninguém é sugado pela porta */
+        if(!soltos.length){
+          const menor = Math.min.apply(null, pool.map(pesoPorta));
+          soltos = pool.filter(n => pesoPorta(n) === menor);
+        }
+      }
+      /* quem está "na vez" daquela posição vem primeiro; depois vale a nota */
+      return (soltos.length ? soltos : pool).sort((a,b) =>
+           (naVezDele(a) ? 0 : 1) - (naVezDele(b) ? 0 : 1)
+        || (nota(a) - nota(b))
+        || a.localeCompare(b));
+    });
+    /* Monta a LINHA INTEIRA de uma vez e escolhe a combinação de menor custo.
+       Antes cada posição escolhia sozinha, na ordem, e a porta acabava levando
+       quem seria muito melhor no microfone ou no auditório. */
+    const notaDe = (n, k) => {
+      const c = sem(n), jj = k === 3 ? 2 : k;
+      return (uso[c]||0)*3 + (usoPos[jj][c]||0) + (ultimoPapel[c] === jj ? 2 : 0)
+        /* quem serve na porta e em outra posição vai revezando: a diferença entre
+           a porta e a posição menos usada dele puxa a nota para baixo, e quanto
+           maior a diferença, mais forte o empurrão */
+        - (jj !== 0 ? Math.max(0, (usoPos[0][c]||0) - (usoPos[jj][c]||0)) * 9 : 0)
+        - escassez(n);
+    };
+    const combos = [];
+    const TETO = 8;                       // no máximo 8 candidatos por posição
+    const monta = (k, esc, custo) => {
+      if(combos.length > 400) return;
+      if(k === 4){
+        const s = esc.map(sem);
+        if(s.includes('PETERSON') && s.includes('GILBERTO')) return;
+        const ch = d.getFullYear()+'-'+d.getMonth();
+        if(esc.some(x => igual(x,'Fabrício')) && mesFab.has(ch) &&
+           !fixos.some(f => f && igual(f,'Fabrício'))) return;
+        combos.push({esc: esc.slice(), custo});
+        return;
+      }
+      opcoes[k].slice(0, TETO).forEach(n => {
+        if(esc.some(x => igual(x,n))) return;
+        monta(k+1, esc.concat(n), custo + notaDe(n,k));
+      });
+    };
+    monta(0, [], 0);
+    combos.sort((a,b) => a.custo - b.custo);
+    for(const c of combos){
+      const esc = c.esc;
+      const ch = d.getFullYear()+'-'+d.getMonth();
+      sol[i] = esc.slice();
+      marcar(esc, +1);
+      const marcou = esc.some(x => igual(x,'Fabrício')) && !mesFab.has(ch);
+      if(marcou) mesFab.add(ch);
+      if(resolver(i+1)) return true;
+      marcar(esc, -1);
+      if(marcou) mesFab.delete(ch);
+      sol[i] = null;
+    }
+    return false;
+  }
+  let deu = resolver(0);
+  const vazias = [];
+  /* se não fecha a lista inteira, preenche o que dá e deixa em branco só o que faltou,
+     em vez de devolver nada */
+  if(!deu){
+    for(const k in uso) delete uso[k];
+    mesFab.clear();
+    datas.forEach((d,i) => {
+      const g = ja[d.getTime()] || [];
+      const antes = i ? (sol[i-1]||[]).map(sem) : [];
+      const linha = [];
+      [ENTRADA, INTERNO, MICROFONE, MICROFONE].forEach((p,k) => {
+        const guardado = g[k];
+        if(guardado && !choque(guardado,d) && !linha.some(x => x && igual(x,guardado))){
+          linha.push(guardado); return;
+        }
+        const pool = p.filter(n => livre(n,d) && !antes.includes(sem(n)) &&
+          !linha.some(x => x && igual(x,n)) &&
+          !(igual(n,'Fabrício') && mesFab.has(d.getFullYear()+'-'+d.getMonth())) &&
+          !(igual(n,'Peterson') && linha.some(x => x && igual(x,'Gilberto'))) &&
+          !(igual(n,'Gilberto') && linha.some(x => x && igual(x,'Peterson'))))
+          .sort((a,b) => { const j = k === 3 ? 2 : k;
+            return ((uso[sem(a)]||0)*3 + (usoPos[j][sem(a)]||0))
+                 - ((uso[sem(b)]||0)*3 + (usoPos[j][sem(b)]||0)) || a.localeCompare(b); });
+        linha.push(pool[0] || '');
+      });
+      linha.forEach((n,k) => { if(n){ const c = sem(n); uso[c] = (uso[c]||0)+1;
+        usoPos[k === 3 ? 2 : k][c] = (usoPos[k === 3 ? 2 : k][c]||0)+1;
+        if(igual(n,'Fabrício')) mesFab.add(d.getFullYear()+'-'+d.getMonth()); } });
+      if(linha.some(n => !n)) vazias.push(fmt(d));
+      sol[i] = linha;
+    });
+    deu = true;
+  }
+  const notas = [];
+  if(mantidos.length) notas.push('Mantive as designações que já estavam na planilha nos dias ' +
+    [...new Set(mantidos)].join(', ') + ', trocando apenas quem tinha choque.');
+  [...new Set(ajustes)].forEach(a => notas.push(a));
+  if(vazias.length) notas.push('Não achei gente livre para todas as posições nos dias ' +
+    [...new Set(vazias)].join(', ') + '. Deixei em branco o que faltou — preencha à mão ' +
+    'ou revise quem está ocupado nessas datas.');
+  return {grade: sol, notas, incompleta: vazias.length > 0};
+}
+
+/* ============ botão montar ============ */
+function montarTudo(){
+  lerListas();                       // pega quem entrou ou saiu antes de calcular
+  /* por padrão o que já está na planilha fica; marcando a caixa, tudo é recalculado */
+  const guardadas = jaNaPlanilha;
+  if($('#cRecalc') && $('#cRecalc').checked) jaNaPlanilha = {};
+  const ini = new Date($('#inicio').value + 'T00:00:00');
+  if(isNaN(ini)){ alert('Escolha a data da primeira reunião de meio de semana.'); return; }
+  const ev = lerDatas($('#eventos').value);
+  quartas = calcularQuartas();
+
+  const domingos = []; let d = somaDias(quartas[0], passoParaFds());
+  while(domingos.length < ABAS.fds.n){ if(!semReuniao(ev,d)) domingos.push(d); d = somaDias(d,7); }
+  const alternadas = []; d = new Date($('#inicio').value + 'T00:00:00');
+  while(alternadas.length < ABAS.ind.n){
+    if(!semReuniao(ev,d)) alternadas.push(ajustaSuper(d));
+    d = somaDias(d, ehMeio(d) ? passoParaFds() : 7 - passoParaFds());
+  }
+  const r = {};
+  if($('#cLeit').checked){ r.leitores = montarLeitores(quartas); r.leitores.datas = quartas; }
+  if($('#cFds').checked){
+    const pq0 = {};
+    if(r.leitores) r.leitores.datas.forEach((x,k) => pq0[x.getTime()] = r.leitores.seq[k]);
+    r.fds = montarFds(domingos, pq0); r.fds.datas = domingos;
+  }
+  if($('#cInd').checked){
+    const pq = {}, pd = {};
+    if(r.leitores) r.leitores.datas.forEach((x,k) => pq[x.getTime()] = r.leitores.seq[k]);
+    if(r.fds) r.fds.datas.forEach((x,k) => pd[x.getTime()] = [r.fds.pres[k], r.fds.leit[k]]);
+    r.ind = montarIndicadores(alternadas, pq, pd); r.ind.datas = alternadas;
+  }
+  if($('#cMS').checked && zipMS && semanasPdf.length && r.leitores){
+    const leitorPor = {};
+    r.leitores.datas.forEach((d,i) => leitorPor[d.getTime()] = MAI(r.leitores.seq[i]));
+    const vivas = semanasPdf.filter(sem => !semReuniao(ev, sem.quarta));
+    r.ms = [];
+    for(let k=0; k<vivas.length; k+=2){
+      const par = vivas.slice(k, k+2);
+      r.ms.push({semanas: par,
+        leitores: par.map(sem => leitorPor[ajustaSuper(sem.quarta).getTime()] ||
+                                 leitorPor[sem.quarta.getTime()] || '')});
+    }
+  }
+  if($('#cDisc').checked) r.discursos = coletarDisc();
+  if($('#cLimp').checked && zipLimp){
+    /* data própria da limpeza, se houver */
+    const dl = new Date(($('#iniLimp').value || $('#inicio').value) + 'T00:00:00');
+    r.limpeza = montarLimpeza(isNaN(dl) ? quartas[0] : dl, ev);
+  }
+  resultado = r; mostrar();
+  guardarPeriodo();
+  jaNaPlanilha = guardadas;
+}
+$('#btnMontar').addEventListener('click', montarTudo);
+
+
+/* ============ prévia no formato da planilha ============ */
+function quadro(chave, linhas, mexidas, notas, incompleta){
+  const {titulo, cabs} = ABAS[chave];
+  return '<div class="quadro"><table class="pl"><caption>' + titulo + '</caption><tr>' +
+    cabs.map(c => '<th>' + c + '</th>').join('') + '</tr>' +
+    linhas.map((l,i) => '<tr' + (mexidas && mexidas.has(i) ? ' class="mexida"' : '') +
+      '><td class="dt">' + l[0] + '</td>' +
+      l.slice(1).map(c => '<td>' + MAI(c) + '</td>').join('') + '</tr>').join('') +
+    '</table>' + (notas && notas.length ?
+      '<div class="aviso' + (incompleta ? ' erro' : '') + '">' +
+      notas.join('<br><br>') + '</div>' : '') + '</div>';
+}
+function mostrar(){
+  const r = resultado; let h = '';
+  const dt = d => fmt(d) + '/' + d.getFullYear();
+  if(r.leitores) h += quadro('leitores',
+    r.leitores.datas.map((d,i) => [dt(d), r.leitores.seq[i]]), r.leitores.mexidas, r.leitores.notas);
+  if(r.fds) h += quadro('fds',
+    r.fds.datas.map((d,i) => [dt(d), r.fds.pres[i], r.fds.leit[i]]), r.fds.mexidas, r.fds.notas);
+  if(r.ind){
+    h += quadro('ind', r.ind.datas.map((d,i) => [dt(d)].concat(r.ind.grade[i])),
+      null, r.ind.notas, r.ind.incompleta);
+  }
+  if(r.disc && r.disc.some(l => l[1])){
+    h += quadro('disc', r.disc.map(l => [dt(l[0]), l[1], l[2]]), null,
+      ['Confira os temas e os oradores antes de baixar.']);
+  }
+  if(r.discursos && r.discursos.length){
+    h += '<div class="quadro"><table class="pl"><caption>' + DISCURSOS.titulo + '</caption>' +
+      '<tr><th>DATA</th><th>TEMA</th><th>ORADOR</th></tr>' +
+      r.discursos.map(l => '<tr><td class="dt">' + dt(l.data) + '</td><td>' + MAI(l.tema) +
+        '</td><td>' + MAI(l.orador) + '</td></tr>').join('') + '</table></div>';
+  }
+  if(r.limpeza){
+    h += '<div class="quadro"><table class="pl"><caption>LIMPEZA DOS GRUPOS APÓS AS REUNIÕES' +
+      '</caption><tr><th>DATA</th><th>GRUPO DESIGNADO</th></tr>' +
+      r.limpeza.linhas.map(l => '<tr><td class="dt">' + l[0] + '</td><td>' + l[1] + '</td></tr>').join('') +
+      '</table><div class="aviso">' + r.limpeza.notas.join('<br><br>') + '</div></div>';
+  }
+  if(r.ms) h += '<div class="aviso">Programação do meio de semana: ' +
+    r.ms.reduce((a,f)=>a+f.semanas.length,0) + ' semanas em ' + r.ms.length +
+    ' folha(s), prontas para baixar.</div>';
+  $('#btnMS').hidden = !r.ms;
+  $('#btnLimpeza').hidden = !r.limpeza;
+  $('#saida').innerHTML = h;
+  $('#c6').hidden = false;
+  $('#c6').scrollIntoView({behavior:'smooth', block:'start'});
+}
+/* mudou um nome lá em cima? refaz tudo com a alteração */
+/* refaz tudo com as correções que você acabou de digitar */
+$('#btnRefazer').addEventListener('click', montarTudo);
+$('#btnMS').addEventListener('click', async () => {
+  if(!resultado.ms || !zipMS) return;
+  for(let k=0; k<resultado.ms.length; k++){
+    const f = resultado.ms[k];
+    const z = await JSZip.loadAsync(await zipMS.generateAsync({type:'blob'}));
+    z.file('word/document.xml',
+      gerarFolha(xmlMS, f.semanas, f.leitores, n => MAI(n.split('/').map(arrumaNome).join('/'))));
+    const blob = await z.generateAsync({type:'blob',
+      mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'PROGRAMACAO_parte' + (k+1) + '.docx';
+    a.click(); URL.revokeObjectURL(a.href);
+    await new Promise(r => setTimeout(r, 400));   // o navegador precisa de um respiro entre downloads
+  }
+});
+$('#btnLimpeza').addEventListener('click', async () => {
+  if(!resultado.limpeza || !zipLimp) return;
+  zipLimp.file('word/document.xml', gravarLimpeza(resultado.limpeza.linhas));
+  const blob = await zipLimp.generateAsync({type:'blob',
+    mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'LIMPEZA_' + $('#inicio').value + '.docx';
+  a.click(); URL.revokeObjectURL(a.href);
+});
+
+/* ============ gravar de volta na planilha ============ */
+const estilosDeData = new Set();
+function trocarCelula(xml, ref, valor, ehData){
+  const esc = String(valor).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const re = new RegExp('<c r="' + ref + '"([^>]*?)(\\/>|>[\\s\\S]*?<\\/c>)');
+  const m = xml.match(re);
+  if(!m) return xml;
+  const attrs = m[1].replace(/\s*t="[^"]*"/,'');    // preserva o s=" ", que carrega a formatação
+  const est = m[1].match(/s="(\d+)"/);
+  if(ehData && est) estilosDeData.add(+est[1]);
+  return xml.replace(re, ehData
+    ? '<c r="' + ref + '"' + attrs + '><v>' + valor + '</v></c>'
+    : '<c r="' + ref + '"' + attrs + ' t="inlineStr"><is><t xml:space="preserve">' +
+      esc + '</t></is></c>');
+}
+/* o formato 16 do Excel pega o idioma do computador: criamos um fixo em português */
+function idiomaData(styles){
+  if(!estilosDeData.size) return styles;
+  const entrada = '<numFmt numFmtId="200" formatCode="[$-416]d\\-mmm"/>';
+  if(!styles.includes('numFmtId="200"')){
+    styles = styles.includes('<numFmts')
+      ? styles.replace(/(<numFmts[^>]*>)/, a => a + entrada)
+      : styles.replace('<fonts', '<numFmts count="1">' + entrada + '</numFmts><fonts');
+  }
+  const bloco = (styles.match(/<cellXfs[^>]*>[\s\S]*?<\/cellXfs>/)||[''])[0];
+  if(!bloco) return styles;
+  const xfs = bloco.match(/<xf [^>]*\/>|<xf [^>]*>[\s\S]*?<\/xf>/g) || [];
+  let novo = bloco;
+  [...estilosDeData].sort((a,b)=>a-b).forEach(i => {
+    if(i < xfs.length) novo = novo.replace(xfs[i], xfs[i].replace(/numFmtId="\d+"/, 'numFmtId="200"'));
+  });
+  return styles.replace(bloco, novo);
+}
+
+$('#btnBaixar').addEventListener('click', async () => {
+  const r = resultado;
+  if(!zip){ alert('Para baixar a planilha é preciso subir a planilha na etapa 2. ' +
+    'A limpeza e a programação saem em Word, nos botões ao lado.'); return; }
+  const grava = async (chave, linhas) => {
+    const aba = acharAba(ABAS[chave].nome);
+    if(!aba) return;
+    let xml = await zip.file(planilhas[aba]).async('string');
+    const {linha0, cols} = ABAS[chave];
+    const passo = ABAS[chave].passo || 1;      // discursos ocupam duas linhas por item
+    linhas.forEach((vals, i) => vals.forEach((v, c) => {
+      xml = trocarCelula(xml, cols[c] + (linha0 + i*passo), c === 0 ? v : MAI(v), c === 0);
+    }));
+    zip.file(planilhas[aba], xml);
+  };
+  if(r.leitores) await grava('leitores', r.leitores.datas.map((d,i) => [serial(d), r.leitores.seq[i]]));
+  if(r.fds) await grava('fds', r.fds.datas.map((d,i) => [serial(d), r.fds.pres[i], r.fds.leit[i]]));
+  if(r.ind && r.ind.grade) await grava('ind',
+    r.ind.datas.map((d,i) => [serial(d)].concat(r.ind.grade[i])));
+  if(r.discursos && r.discursos.length){
+    const aba = acharAba(DISCURSOS.nome);
+    if(aba){
+      let xml = await zip.file(planilhas[aba]).async('string');
+      xml = garantirBlocos(xml, r.discursos.length);
+      r.discursos.forEach((l, i) => {
+        const linha = DISCURSOS.linha0 + i*DISCURSOS.passo;   // cada discurso ocupa duas linhas
+        xml = trocarCelula(xml, 'B'+linha, serial(l.data), true);
+        xml = trocarCelula(xml, 'C'+linha, MAI(l.tema), false);
+        xml = trocarCelula(xml, 'D'+linha, MAI(l.orador), false);
+        /* a linha de baixo do bloco pode guardar a segunda linha de um evento antigo */
+        ['B','C','D'].forEach(c => xml = trocarCelula(xml, c + (linha+1), '', false));
+      });
+      zip.file(planilhas[aba], xml);
+    }
+  }
+  if(r.disc) await grava('disc', r.disc.map(l => [serial(l[0]), l[1], l[2]]));
+  const st = zip.file('xl/styles.xml');
+  if(st) zip.file('xl/styles.xml', idiomaData(await st.async('string')));
+  const blob = await zip.generateAsync({type:'blob',
+    mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'DESIGNACOES_' + $('#inicio').value + '.xlsx';
+  a.click(); URL.revokeObjectURL(a.href);
+});
+</script>
+<script>
+/* deixa o app instalável e funcionando sem internet */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () =>
+    navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
